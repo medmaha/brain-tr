@@ -1,9 +1,10 @@
 import Image from "next/image";
+import PostsWrapper from "./components/Posts";
 
-export default function Home() {
+export default function Page() {
   return (
     <div className="">
-      MDM
+      <PostsWrapper/>
     </div>
   );
 }
