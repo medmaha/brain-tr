@@ -1,12 +1,12 @@
+"use client";
 import React from "react";
-import { PageProps } from "../../../../.next/types/app/page";
 
 export default function Page(props: PageProps) {
   const { slug } = props.params;
+
   return (
-    <div>
-      {/*  */}
-      Slug {slug}
-    </div>
+    <p className="mb-4 card mt-2 p-2 px-4 shadow w-[400px] mx-auto rounded-xl">
+      <b className="pr-2">Slug:</b> {slug}
+    </p>
   );
 }

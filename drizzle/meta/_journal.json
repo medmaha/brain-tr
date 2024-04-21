@@ -1,0 +1,27 @@
+{
+  "version": "5",
+  "dialect": "pg",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1713367057991,
+      "tag": "0000_lowly_micromax",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1713566389750,
+      "tag": "0001_safe_boomerang",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1713624458662,
+      "tag": "0002_dear_korath",
+      "breakpoints": true
+    }
+  ]
+}

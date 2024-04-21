@@ -5,3 +5,41 @@
 .post-author-img {
   object-fit: cover;
 }
+
+@layer base {
+  body {
+    @apply bg-gray-50 dark:bg-stone-900 dark:text-white;
+  }
+
+  video {
+    @apply focus:outline-none focus:border-none rounded h-auto;
+  }
+}
+@layer components {
+  .card {
+    @apply bg-white dark:bg-stone-800;
+  }
+  .input {
+    @apply rounded bg-transparent dark:text-white
+    border-none outline-stone-700 outline border-transparent
+    focus:border-none focus:outline-sky-500/60 text-sm focus:outline-2 transition-[outline];
+  }
+  .border,
+  .border-b,
+  .border-t {
+    @apply dark:border-stone-600;
+  }
+}
+
+.uploading {
+  animation: uploading-animate 2s ease-in-out infinite;
+}
+
+@keyframes uploading-animate {
+  0% {
+    left: -40px;
+  }
+  100% {
+    left: 100%;
+  }
+}

@@ -1,17 +1,17 @@
 "use client";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import slugify from "slugify";
+import { PostFeedsInterface } from "@/server/controllers/posts";
 
-export default function PostImage({ post }: any) {
+type Props = {
+  post: PostFeedsInterface;
+};
+
+export default function PostImage({ post }: Props) {
   const router = useRouter();
 
   function navigate() {
-    const url = `/posts/${slugify(post.slug, {
-      lower: true,
-      strict: true,
-    })}`;
-    console.log(url);
+    const url = `/posts/${post.slug}`;
     router.push(url);
   }
 
@@ -19,8 +19,8 @@ export default function PostImage({ post }: any) {
     <div className="block mx-auto" onClick={navigate}>
       <Image
         width={600}
-        height={400}
-        src={`/test${post.id}.png`}
+        height={500}
+        src={`${post.fileUrl || "/placeholder-img.jpeg"}`}
         alt="Post Image"
       />
     </div>

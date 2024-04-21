@@ -1,17 +1,19 @@
 "use client";
+import { PostFeedsInterface } from "@/server/controllers/posts";
 import { Heart, LucideBookmark, MessageCircle, Share2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useMemo } from "react";
+
+type Props = {
+  post: PostFeedsInterface;
+};
 
 // Post Card for individual posts
-export default function PostActions({ post }: any) {
+export default function PostActions({ post }: Props) {
   const router = useRouter();
-
-  const iconSize = useMemo(() => 25, []);
 
   return (
     <>
-      <div className="flex items-center gap-3 p-2">
+      <div className="flex items-center gap-3">
         <button className="">
           <Heart className="text-red-300" />
         </button>

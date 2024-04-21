@@ -3,22 +3,34 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "migrate:up": "drizzle-kit push:pg",
+    "migrate:down": "drizzle-kit pull:pg",
+    "migrate:build": "drizzle-kit generate:pg",
+    "admin-site": "drizzle-kit studio --port 3000",
     "dev": "next dev -p 80",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
+    "@ffmpeg/ffmpeg": "^0.12.10",
+    "@ffmpeg/util": "^0.12.1",
+    "date-fns": "^3.6.0",
+    "drizzle-orm": "^0.30.8",
+    "firebase": "^10.11.0",
     "lucide-react": "^0.368.0",
     "next": "14.2.1",
+    "postgres": "^3.4.4",
     "react": "^18",
-    "react-dom": "^18",
-    "slugify": "^1.6.6"
+    "react-dom": "^18"
   },
   "devDependencies": {
+    "@types/ffmpeg": "^1.0.7",
+    "@types/fluent-ffmpeg": "^2.1.24",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "drizzle-kit": "^0.20.14",
     "eslint": "^8",
     "eslint-config-next": "14.2.1",
     "postcss": "^8",

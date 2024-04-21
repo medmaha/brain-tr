@@ -1,6 +1,7 @@
 import React from "react";
 import { Camera, Music, MessageSquare, Home } from "lucide-react";
 import Link from "next/link";
+import NavLink from "./NavLink";
 
 export default function Navbar() {
   return (
@@ -8,23 +9,23 @@ export default function Navbar() {
       <a href="/" className="text-xl">
         MDM
       </a>
-      <ul className="flex items-center gap-4 justify-end">
-        <Link href="/" className="flex items-center space-x-2">
+      <ul className="flex items-center gap-4 lg:gap-8 justify-end">
+        <NavLink href="/">
           <Home size={24} />
           <span className="hidden md:inline-block">Home</span>
-        </Link>
-        <Link href="#" className="flex items-center space-x-2">
+        </NavLink>
+        <NavLink href="/photoes">
           <Camera size={24} />
           <span className="hidden md:inline-block">Photos</span>
-        </Link>
-        <Link href="#" className="flex items-center space-x-2">
+        </NavLink>
+        <NavLink href="/music">
           <Music size={24} />
           <span className="hidden md:inline-block">Music</span>
-        </Link>
-        <Link href="#" className="flex items-center space-x-2">
+        </NavLink>
+        <NavLink href="/messages">
           <MessageSquare size={24} />
           <span className="hidden md:inline-block">Messages</span>
-        </Link>
+        </NavLink>
       </ul>
     </nav>
   );
