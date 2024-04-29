@@ -1,9 +1,18 @@
 "use server";
+// import { getVideoMetadata } from "get-video-metadata";
 
 import { deleteUploadedFile, uploadFile } from "@/lib/firebase/uploader";
 import DB from "@/server/db/connection";
-import { posts } from "@/server/schema/posts";
+import { posts } from "@/server/models/posts";
 import { sql } from "drizzle-orm";
+
+export async function getVideoData(data: FormData) {
+  // const metadata = await getVideoMetadata(
+  // URL.createObjectURL(data.get("file") as File)
+  // );
+  // console.log(metadata);
+  return {};
+}
 
 export async function createPost(formData: FormData) {
   const author = { id: 1 };

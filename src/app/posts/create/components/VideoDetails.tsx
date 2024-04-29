@@ -3,7 +3,7 @@ import Hashtags from "./Hashtags";
 
 export function VideoDetails({ thumbnail }: any) {
   return (
-    <div className="sm:flex flex-wrap items-start gap-4 md:max-w-[500px]">
+    <div className="sm:flex flex-wrap items-start gap-4 md:max-w-[450px] lg:max-w-[500px]">
       <div className="flex-1 space-y-4">
         <div className="grid">
           <label htmlFor="media_name" className="text-sm mb-2">

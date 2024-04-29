@@ -10,4 +10,11 @@ interface PageProps {
   };
 }
 
-type FileType = "image" | "video" | "audio" | "other";
+type FileType = "image" | "video" | "audio" | "comment" | "avatar" | "other";
+
+type ActionReturn<T = any> = { message: string } & (
+  | { success: true; data: T }
+  | { success: false }
+);
+
+type FormActionReturn<T = any> = ActionReturn<T>;

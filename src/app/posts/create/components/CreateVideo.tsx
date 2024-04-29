@@ -1,15 +1,13 @@
 "use client";
-
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import VideoUploader from "./VideoUploader";
 import VideoThumbnail from "./VideoThumnail";
 import { ArrowLeft, Loader2, Upload } from "lucide-react";
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { toBlobURL } from "@ffmpeg/util";
 import { deleteUploadedFile } from "@/lib/firebase/uploader";
-import Image from "next/image";
 import { VideoDetails } from "./VideoDetails";
-import { createPost } from "../actions";
+import { createPost, getVideoData } from "../actions";
 import { useRouter } from "next/navigation";
 import SubmitLine from "./SubmitLine";
 
@@ -95,11 +93,15 @@ export default function CreateVideo() {
     input.type = "file";
     input.accept = "video/*";
     input.multiple = false;
-    input.onchange = () => {
+    input.onchange = async () => {
       const file = input.files?.[0];
       input.remove();
       if (file) {
-        setFile(file);
+        const formData = new FormData();
+        formData.append("file", file);
+        const response = await getVideoData(formData);
+        console.log(response);
+        // setFile(file);
       }
     };
     input.click();
@@ -204,7 +206,7 @@ export default function CreateVideo() {
           </div>
         )}
         {file && (
-          <div className={`grid space-y-4 md:grid-cols-[1fr,300px]`}>
+          <div className={`grid space-y-4 gap-4 md:grid-cols-[1fr,300px]`}>
             <div className="md:order-last">
               {isReady && (
                 <VideoUploader
@@ -223,7 +225,7 @@ export default function CreateVideo() {
               )}
               <VideoThumbnail
                 video={file}
-                ffmpeg={ffmpeg!}
+                // ffmpeg={ffmpeg!}
                 setReady={setReady}
                 setThumbnail={setThumbnail}
               />

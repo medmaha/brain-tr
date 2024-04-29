@@ -9,13 +9,14 @@ import { PostFeedsInterface } from "@/server/controllers/posts";
 import { User2 } from "lucide-react";
 
 type Props = {
+  user?: AuthUser;
   post: PostFeedsInterface;
 };
 
 // Post Card for individual posts
-export default function Post({ post }: Props) {
+export default function Post({ post, user }: Props) {
   return (
-    <div className="grid lg:mb-4 grid-cols-1 shadow-md rounded-b rounded-md overflow-hidden card max-w-[550px]">
+    <div className="grid lg:mb-4 grid-cols-1 shadow-md rounded-b rounded-md overflow-hidden card max-w-[500px]">
       <div className="grid items-center gap-2 justify-center">
         {post.fileType === "image" && <PostImage post={post} />}
         {post.fileType === "video" && <PostVideo post={post} />}
@@ -23,10 +24,6 @@ export default function Post({ post }: Props) {
       </div>
       <div className="space-y-4 p-2">
         <PostCaption post={post} />
-
-        <div className="flex items-center justify-between gap-3">
-          <PostActions post={post} />
-        </div>
         <div className="flex items-center justify-between gap-3">
           <PostAuthor post={post} />
           <p className="text-sm opacity-70">
@@ -35,11 +32,12 @@ export default function Post({ post }: Props) {
               {/* <time>
                 {formatDistance(new Date(post.created_at), new Date(), {
                   addSuffix: true,
-                })}
+                })}s
               </time> */}
             </small>
           </p>
         </div>
+        <PostActions post={post} user={user} />
       </div>
     </div>
   );
@@ -70,8 +68,10 @@ function PostAuthor({ post }: Props2) {
       </div>
       <div className="flex items-center_">
         <div className="">
-          <p className="">Mahammed Touray</p>
-          <p className="leading-none text-sm opacity-60">@mahammedtouray</p>
+          <p className="">{post.author?.name}</p>
+          <p className="leading-none text-sm opacity-60">
+            @{post.author?.username}
+          </p>
         </div>
       </div>
     </div>

@@ -83,7 +83,7 @@ export default function PostVideo({ post }: Props) {
           const video = target as HTMLVideoElement;
           localStorage.setItem("_MediaVolume", String(video.volume.toFixed(2)));
         }}
-        className="md:min-[300px] md:max-h-[400px] rounded-b-none"
+        className="md:min-[300px] max-h-[90svh] md:max-h-auto rounded-b-none"
         poster={post.thumbnailUrl!}
         disableRemotePlayback={true}
         disablePictureInPicture={true}

@@ -18,6 +18,7 @@ export default function PostImage({ post }: Props) {
   return (
     <div className="block mx-auto" onClick={navigate}>
       <Image
+        className="max-h-[90svh] md:max-h-auto"
         width={600}
         height={500}
         src={`${post.fileUrl || "/placeholder-img.jpeg"}`}

@@ -5,10 +5,11 @@ import React, { useMemo } from "react";
 
 type Props = {
   href: string;
+  isButton?: boolean;
   children: React.ReactNode;
 };
 
-export default function NavLink({ href, children }: Props) {
+export default function NavLink(props: Props) {
   const segment = useSelectedLayoutSegment();
 
   const target = useMemo(() => {
@@ -18,12 +19,14 @@ export default function NavLink({ href, children }: Props) {
 
   return (
     <Link
-      href={href}
+      href={props.href}
       className={`flex items-center space-x-2 transition-all ${
-        target === href ? "text-sky-500 font-semibold" : "hover:text-sky-600"
+        target === props.href && !props.isButton
+          ? "text-sky-500 font-semibold"
+          : !props.isButton && "hover:text-sky-600"
       }`}
     >
-      {children}
+      {props.children}
     </Link>
   );
 }

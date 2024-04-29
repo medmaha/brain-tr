@@ -7,7 +7,7 @@ import { Loader2, RefreshCw, Trash2, Upload } from "lucide-react";
 
 type Props = {
   video?: File;
-  ffmpeg: FFmpeg;
+  // ffmpeg: FFmpeg;
   setReady: (value: boolean) => void;
   setThumbnail: (file: Blob) => void;
 };
@@ -24,25 +24,8 @@ type CacheType = Map<"data", Thumbnail[]>;
 
 export default function VideoThumbnail(props: Props) {
   const processing = useRef(false);
-  const downloadUrl = useRef<string>();
-  const selectedFile = useRef<File | undefined>(props.video);
-  const cachedThumbnails = useRef<CacheType>();
-  const [thumbnails, setThumbnails] = useState<Thumbnail[]>(
-    cachedThumbnails.current?.get("data") || []
-  );
-
-  useEffect(() => {
-    const _file = selectedFile.current;
-    const progress = ({ progress }: any) => {
-      if (progress > 99 && processing.current) processing.current = false;
-      else processing.current = true;
-    };
-    props.ffmpeg.on("progress", progress);
-    return () => {
-      props.ffmpeg.off("progress", progress);
-      if (_file?.name !== props.video?.name) processing.current = false;
-    };
-  }, [props.video, props.ffmpeg]);
+  const ffmpeg = useRef<FFmpeg>();
+  const [thumbnails, setThumbnails] = useState<Thumbnail[]>([]);
 
   const switchActiveFile = useCallback(
     (thumbnail: Thumbnail) => {
@@ -55,114 +38,111 @@ export default function VideoThumbnail(props: Props) {
           };
 
           if (data.active) {
+            console.log(thumbnail);
             props.setReady(true);
           }
           return data;
         })
       );
     },
-    [props]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [props.setReady, props.setThumbnail]
   );
 
-  const generateThumbnails = useCallback(
-    async (file: File) => {
-      if (processing.current) return;
-      processing.current = true;
+  const generateThumbnails = useCallback(async () => {
+    const file = props.video!;
+    if (processing.current) return;
+    processing.current = true;
 
-      const ffmpeg = props.ffmpeg;
-      try {
-        await ffmpeg.deleteFile("input.mp4");
-      } catch (error) {}
+    const _ffmpeg = ffmpeg.current;
 
-      await ffmpeg.writeFile("input.mp4", await fetchFile(file));
-      const isFileWritten = await ffmpeg.writeFile(
-        "input.mp4",
-        await fetchFile(file)
-      );
-      if (!isFileWritten) {
-        // Handle error, maybe display message to user
-        alert("Failed to write input file for ffmpeg");
-        return;
-      }
-
-      const timestamps = ["00:00:00", "00:00:3", "00:00:5"];
-
-      const promises = [] as Promise<any>[];
-      const _thumbnails = [] as Thumbnail[];
-
-      await ffmpeg.createDir("t");
-
-      let idx = 0;
-      const index = Math.floor(Math.random() * timestamps.length);
-      async function get() {
-        for (const timestamp of timestamps) {
-          // Generate thumbnail for each timestamp
-          await ffmpeg.exec([
-            "-accurate_seek",
-            "-i",
-            "input.mp4",
-            "-r",
-            "1",
-            "-ss",
-            timestamp,
-            "-t",
-            "2",
-            "-frames:v",
-            "1",
-            `-vf`,
-            `thumbnail`,
-            `t/output_${timestamp.replace(/:/g, "")}.jpg`,
-          ]);
-          const _tBuilder = async (_idx: number) => {
-            const filename = `t/output_${timestamp.replace(/:/g, "")}.jpg`;
-            const data = await ffmpeg.readFile(filename);
-            const thumbnail: Thumbnail = {
-              id: getUniqueId() + 1,
-              file: new Blob([data], { type: "image/png" }),
-              active: idx === 0 || _idx === index,
-              dummy: false,
-            };
-            promises.push(ffmpeg.deleteFile(filename));
-            return thumbnail;
-            // return async () => {
-            // };
-          };
-          const _i = Number(idx);
-          const thumbnail = await _tBuilder(_i);
-          _thumbnails.push(thumbnail);
-          setThumbnails(() => [...getThumbnails(_thumbnails)]);
-          if (idx === 0) {
-            switchActiveFile(thumbnail);
-          }
-          idx++;
-        }
-      }
-      await get();
-      setThumbnails(getThumbnails([..._thumbnails]));
-      promises.push(ffmpeg.deleteFile("t"));
-      promises.push(ffmpeg.deleteDir("t"));
-      processing.current = false;
-      await Promise.all<typeof promises>(promises);
-      const activeThumbnail = _thumbnails.find((t) => t.active);
-      if (activeThumbnail) {
-        switchActiveFile(activeThumbnail);
-      }
-      cachedThumbnails.current = cachedThumbnails.current || new Map();
-      cachedThumbnails.current.set("data", _thumbnails);
+    if (!_ffmpeg) {
+      alert("Failed to load ffmpeg!");
       return;
-    },
-    [props.ffmpeg, switchActiveFile]
-  );
+    }
+    await _ffmpeg.writeFile("input.webm", await fetchFile(file));
 
-  useEffect(() => {
-    async function func() {
-      if (processing.current) return;
-      if (props.video) {
-        await generateThumbnails(props.video);
+    var a = await _ffmpeg.exec([
+      "-i input.webm -show_format",
+      "-f",
+      "mov",
+      "-print_format",
+      "json",
+    ]);
+    console.log(a);
+
+    const isFileWritten = await _ffmpeg.writeFile(
+      "input.mp4",
+      await fetchFile(file)
+    );
+    if (!isFileWritten) {
+      // Handle error, maybe display message to user
+      alert("Failed to write input file for ffmpeg");
+      return;
+    }
+
+    const timestamps = ["00:00:01", "00:00:03", "00:00:05"];
+
+    const promises = [] as Promise<any>[];
+    const _thumbnails = [] as Thumbnail[];
+
+    await _ffmpeg.createDir("t");
+
+    let idx = 0;
+    const index = Math.floor(Math.random() * timestamps.length);
+    async function get() {
+      for (const timestamp of timestamps) {
+        // Generate thumbnail for each timestamp
+        await _ffmpeg?.exec([
+          "-i",
+          "input.webm",
+          "-r",
+          "1",
+          "-ss",
+          timestamp,
+          "-t",
+          "1",
+          "-frames:v",
+          "1",
+          "-vf",
+          "scale=960:-2",
+          `t/output_${idx + 1}.jpg`,
+        ]);
+        const _tBuilder = async (_idx: number) => {
+          const filename = `t/output_${idx + 1}.jpg`;
+          const data = await _ffmpeg!.readFile(filename);
+          const thumbnail: Thumbnail = {
+            id: getUniqueId() + 1,
+            file: new Blob([data], { type: "image/png" }),
+            active: idx === 0 || _idx === index,
+            dummy: false,
+          };
+          promises.push(_ffmpeg!.deleteFile(filename));
+          return thumbnail;
+          // return async () => {
+          // };
+        };
+        const _i = Number(idx);
+        const thumbnail = await _tBuilder(_i);
+        _thumbnails.push(thumbnail);
+        setThumbnails(() => [...getThumbnails(_thumbnails)]);
+        if (idx === 0) {
+          switchActiveFile(thumbnail);
+        }
+        idx++;
       }
     }
-    func();
-  }, [props.video, generateThumbnails]);
+    await get();
+    setThumbnails(getThumbnails([..._thumbnails]));
+    promises.push(_ffmpeg.deleteDir("t"));
+    await Promise.all<typeof promises>(promises);
+    const activeThumbnail = _thumbnails.find((t) => t.active);
+    if (activeThumbnail) {
+      switchActiveFile(activeThumbnail);
+    }
+    return;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const selectFile = () => {
     if (!thumbnails || thumbnails.length > 4) return;
@@ -224,6 +204,37 @@ export default function VideoThumbnail(props: Props) {
     }
     return result;
   };
+
+  useEffect(() => {
+    console.log("Rendered Thumbnail Generator");
+
+    // On ffmpeg compression progress
+    const progress = ({ progress }: any) => {
+      if (progress > 99 && processing.current) processing.current = false;
+      else processing.current = true;
+    };
+
+    // Load ffmpeg
+    const load = async () => {
+      const loaded = await ffmpeg.current?.load();
+      // Make sure ffmpeg is loaded
+      if (!loaded) return alert("Failed to load ffmpeg!");
+
+      ffmpeg.current?.on("progress", progress);
+      // Generate thumbnails
+      await generateThumbnails();
+    };
+
+    const _ffmpeg = new FFmpeg();
+
+    ffmpeg.current = _ffmpeg;
+    load();
+
+    return () => {
+      _ffmpeg?.off("progress", progress);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [props.video]);
 
   return (
     <>

@@ -25,7 +25,7 @@ export const posts = pgTable("posts", {
     commentsCount: integer("comments_count").default(0),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().default(sql`now()`),
-    fileType: varchar("file_type", {length:25, enum: ["image", "video", "audio", "other"] }).notNull(),
+    fileType: varchar("file_type", {length:25, enum: ["image", "video", "audio", "other" , "avatar", "comment"] }).notNull(),
     slug: varchar("slug", { length: 100 }).unique().$defaultFn(generateUniqueSlug),
 });
 

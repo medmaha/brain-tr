@@ -13,16 +13,16 @@ import { posts } from "./posts";
 // prettier-ignore
 export const comments = pgTable("comments", {
     id: serial("id").primaryKey(),
-    text: text("caption").notNull(),
+    text: text("caption"),
     authorId: integer("author_id").notNull(),
-    postsID: integer("author_id").notNull(),
+    postSlug: varchar("post_slug").notNull(),
     fileUrl: varchar("file_url", { length: 256 }),
     hashtags: varchar("hashtags", { length: 256 }),
     likesCount: integer("likes_count").default(0),
     repliesCount: integer("replies_count").default(0),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().default(sql`now()`),
-    fileType: varchar("file_type", {length:20, enum: ["image", "video", "audio", "other"] }),
+    commentType: varchar("file_type", {length:20, enum: ["image", "audio", "text"] }),
 });
 
 export const likes = pgTable("likes", {
@@ -37,8 +37,14 @@ export const likes = pgTable("likes", {
 });
 
 export const commentsRelations = relations(comments, ({ one, many }) => ({
-  author: one(users),
-  post: one(posts),
+  author: one(users, {
+    fields: [comments.authorId],
+    references: [users.id],
+  }),
+  post: one(posts, {
+    fields: [comments.postSlug],
+    references: [posts.slug],
+  }),
   likes: many(likes, {
     relationName: "comment_likes",
   }),

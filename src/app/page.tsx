@@ -1,9 +1,12 @@
+import { getAuthenticatedUser } from "@/lib/auth";
 import PostsWrapper from "./components/Posts";
 import { getPostFeeds } from "@/server/controllers/posts";
 
 export default async function Page(props: PageProps) {
+  const user = getAuthenticatedUser();
+
   const searchParams = props.searchParams;
-  console.log("SearchParams:", searchParams);
+
   const posts = await getPostFeeds();
 
   return (

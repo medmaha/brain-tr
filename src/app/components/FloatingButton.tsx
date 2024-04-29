@@ -1,19 +1,26 @@
 "use client";
 
 import { Plus, X } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import React, { useState } from "react";
 
 const iconSize = 30;
 
-export default function FloatingButton() {
+type Props = {
+  user: AuthUser;
+};
+
+export default function FloatingButton(props: Props) {
   const router = useRouter();
+  const pathname = usePathname();
   const [isOpen, toggleOpen] = useState(false);
 
   const navigate = (href: string) => {
     router.push(href);
     toggleOpen(false);
   };
+
+  if (pathname.includes("auth")) return <></>;
 
   return (
     <div className="fixed bottom-[6rem] sm:bottom-[4rem] right-6 md:right-8 z-10">

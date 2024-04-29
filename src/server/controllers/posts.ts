@@ -43,5 +43,20 @@ export async function getPostDetail(slug: string, page: any) {
   return posts;
 }
 
+export async function getPostForUser(username: string) {
+  const user = await DB.query.users.findFirst({
+    where: sql`username=${username}`,
+  });
+  const posts = await DB.query.posts.findMany({
+    where: sql`author_id=${user?.id}`,
+    columns: {
+      slug: true,
+      thumbnailUrl: true,
+      fileUrl: true,
+    },
+  });
+  return posts;
+}
+
 export type PostFeedsInterface = Awaited<ReturnType<typeof getPostFeeds>>[0];
 export type PostDetailInterface = Awaited<ReturnType<typeof getPostDetail>>;

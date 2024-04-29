@@ -1,0 +1,1 @@
+ALTER TABLE "users_followers" RENAME TO "followers";

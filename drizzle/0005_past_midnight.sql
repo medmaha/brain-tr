@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "posts_count" integer DEFAULT 0 NOT NULL;

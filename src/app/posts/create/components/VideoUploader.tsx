@@ -43,38 +43,33 @@ export default function VideoUploader(props: Props) {
       compressing.current = true;
       const video = _file || props.video;
       const ffmpeg = props.ffmpeg;
-      if (!ffmpeg) return;
+
+      if (!ffmpeg?.loaded) await ffmpeg.load();
+
+      if (!ffmpeg.loaded) {
+        alert("Failed to load ffmpeg!");
+        return;
+      }
+
       await ffmpeg.writeFile("input.webm", await fetchFile(video));
-
-      // fluentFfmpeg.ffprobe("input.webm", (err, metadata) => {
-      //   if (err) {
-      //     console.error("Error:", err);
-      //   } else {
-      //     console.log("Metadata:", metadata);
-      //     console.log("Bitrate:", metadata.format.bit_rate);
-      //   }
-      // });
-
-      // const probe = await ffmpegProbe("input.webm");
-      // return;
 
       const commands = [
         "-i",
         "input.webm",
-        // "-c:v",
-        // "libx264",
-        "-s",
-        "720x420",
+        "-c:v",
+        "copy",
+        "-map_metadata",
+        "-1",
         "-r",
         "25",
+        "-vf",
+        "scale=940:-2",
         "-crf",
-        "25",
-        "-preset",
-        "medium",
-        "-c:a",
-        "aac",
-        "-b:a",
-        "128k",
+        "30",
+        // "-c:a",
+        // "aac",
+        // "-b:a",
+        // "128k",
         "output.mp4",
       ];
 
@@ -93,7 +88,12 @@ export default function VideoUploader(props: Props) {
     if (uploading.current || compressing.current) return;
     uploading.current = true;
 
+    console.clear();
+    console.time("Compression..");
     const compressedVideo = (await compressVideo()) as File;
+    console.timeEnd("Compression..");
+    console.table([props.video, compressedVideo]);
+
     if (!compressedVideo) return;
 
     const onUploadProgress = (progress: number) => {
@@ -112,11 +112,13 @@ export default function VideoUploader(props: Props) {
         },
       });
     };
+    console.time("Uploading...");
     const url = await uploadFileStream(
       compressedVideo,
       "video",
       onUploadProgress
     );
+    console.timeEnd("Uploading...");
     if (downloadUrl.current && url) {
       downloadUrl.current.value = url!;
       props.updateData("file_url", url);
@@ -201,13 +203,14 @@ export default function VideoUploader(props: Props) {
       <div className="flex items-center justify-between mt-2 gap-4 pl-2 pr-1">
         <div className="flex-1">
           <button
+            type="button"
             className="p-1 text-xs px-2 text-left rounded bg-sky-500 hover:bg-sky-500/90 hover:shadow transition"
             onClick={selectFile}
           >
             {!props.video ? "Select file" : "Change File"}
           </button>
         </div>
-        <div className="flex items-center relative pb-1 overflow-x-hidden min-h-max">
+        <div className="flex items-center relative pb-1 overflow-hidden">
           {state.progress.show && (
             <p className="text-xs inline-flex items-center">
               {state.progress.title}:{" "}

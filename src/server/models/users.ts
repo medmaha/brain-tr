@@ -1,6 +1,14 @@
 import { generateUniqueSlug } from "@/lib/utils";
-import { sql } from "drizzle-orm";
-import { pgTable, timestamp, serial, text, varchar } from "drizzle-orm/pg-core";
+import { relations, sql } from "drizzle-orm";
+import {
+  pgTable,
+  timestamp,
+  serial,
+  text,
+  varchar,
+  integer,
+} from "drizzle-orm/pg-core";
+import { followers } from "./followers";
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -10,6 +18,13 @@ export const users = pgTable("users", {
   password: varchar("password", { length: 256 }).notNull().default(""),
   avatar: varchar("avatar_url", { length: 256 }),
   biography: text("biography"),
+  userType: varchar("user_type", {
+    length: 256,
+    enum: ["user", "viber", "admin"],
+  }),
+  postsCount: integer("posts_count").notNull().default(0),
+  followersCount: integer("followers_count").notNull().default(0),
+  followingCount: integer("following_count").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at")
     .notNull()
@@ -19,4 +34,8 @@ export const users = pgTable("users", {
     .$defaultFn(generateUniqueSlug),
 });
 
-export type UserInterafce = typeof users.$inferSelect;
+export const usersRelations = relations(users, ({ many }) => ({
+  followers: many(followers),
+}));
+
+export type UserInterface = typeof users.$inferSelect;

@@ -1,8 +1,14 @@
-export function generateUniqueSlug() {
+/**
+ * Generates a unique string based on the current time.
+ * @returns string
+ */
+export function generateUniqueSlug(length = 12) {
   const numbers = "0123456789";
   const letters = "abcdefghijklmnopqrstuvwxyz";
   const lettersUpper = letters.toUpperCase();
-  const timestamp = Date.now().toString(12).padEnd(6);
+  const timestamp = Date.now()
+    .toString(length)
+    .padEnd(Math.round(length / 2), "1");
 
   const combined = [letters, lettersUpper, numbers, timestamp].join("");
 
