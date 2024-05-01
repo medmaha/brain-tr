@@ -20,7 +20,7 @@ export default function SupporterSetup(props: Props) {
   const [supporter, setSupporter] = useState<SupporterDetailsInterface>();
 
   useEffect(() => {
-    getSetupDetails(props.user.username)
+    getSetupDetails<SupporterDetailsInterface>(props.user.username)
       .then((Supporter) => setSupporter(Supporter))
       .catch((e) => console.log(e));
   }, [props.user]);

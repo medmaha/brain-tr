@@ -1,4 +1,5 @@
 "use server";
+import { getAuthenticatedUser } from "@/lib/auth";
 // import { getVideoMetadata } from "get-video-metadata";
 
 import { deleteUploadedFile, uploadFile } from "@/lib/firebase/uploader";
@@ -15,7 +16,14 @@ export async function getVideoData(data: FormData) {
 }
 
 export async function createPost(formData: FormData) {
-  const author = { id: 1 };
+  const author = getAuthenticatedUser();
+
+  if (!author) {
+    return {
+      success: false,
+      message: "You must be logged in to create a post",
+    };
+  }
   const fileType = formData.get("file_type")?.toString() as FileType;
 
   if (!fileType) {
@@ -64,7 +72,7 @@ export async function createPost(formData: FormData) {
 
   try {
     const user = await DB.query.users.findFirst({
-      where: sql`id=${author.id}`,
+      where: sql`username=${author.username}`,
     });
     if (!user) {
       const deleted_1 = await deleteUploadedFile(fileUrl);

@@ -1,12 +1,12 @@
-import { PostFeedsInterface } from "@/server/controllers/posts";
+import { Loader2, SortAscIcon, SortDescIcon, User2 } from "lucide-react";
 import { CommentListInterface } from "@/server/controllers/comments";
-import { format } from "date-fns";
+import { PostFeedsInterface } from "@/server/controllers/posts";
 import React, { useEffect, useState } from "react";
 import VoiceComment from "./VoiceComment";
 import TextComment from "./TextComment";
-import { Loader2, SortAscIcon, SortDescIcon, User2 } from "lucide-react";
-import Image from "next/image";
 import { getComments } from "./actions";
+import { format } from "date-fns";
+import Image from "next/image";
 
 type Props = {
   user?: AuthUser;
@@ -14,19 +14,51 @@ type Props = {
 };
 
 const commentsCached = new Map();
+const defaultSort: "asc" | "desc" = "desc";
 
 export default function CommentsWrapper({ user, post }: Props) {
   const [fetching, toggleFetching] = useState(false);
   const [comments, setComments] = useState<CommentListInterface>();
-  const [sort, setSort] = useState<"asc" | "desc">("desc");
+  const [sort, setSort] = useState(defaultSort);
 
   useEffect(() => {
+    commentsCached.set("sort", defaultSort);
     return () => {
       commentsCached.clear();
     };
   }, []);
 
   useEffect(() => {
+    const eventHandler = (event: CustomEventInit) => {
+      const comment = event.detail as any;
+      const sort = commentsCached.get("sort") as typeof defaultSort;
+      let _comments: any;
+      if (commentsCached.has(post.slug!)) {
+        if (sort === "asc") {
+          _comments = [comment, ...commentsCached.get(post.slug!)!];
+        } else {
+          _comments = [...commentsCached.get(post.slug!)!, comment];
+        }
+        setComments(_comments);
+        commentsCached.set(post.slug!, _comments);
+      } else {
+        if (sort === "asc") {
+          setComments((prev) => {
+            const data = [comment, ...(prev || [])];
+            commentsCached.set(post.slug!, data);
+            return data;
+          });
+        } else {
+          setComments((prev) => {
+            const data = [...(prev || []), comment];
+            commentsCached.set(post.slug!, data);
+            return data;
+          });
+        }
+      }
+    };
+    document.addEventListener("new-comment", eventHandler);
+
     const fetchData = async () => {
       toggleFetching(true);
       if (commentsCached.has(post.slug!)) {
@@ -42,6 +74,10 @@ export default function CommentsWrapper({ user, post }: Props) {
       toggleFetching(false);
     };
     fetchData();
+
+    return () => {
+      document.removeEventListener("new-comment", eventHandler);
+    };
   }, [post.slug]);
 
   const sortComments = () => {
@@ -66,6 +102,7 @@ export default function CommentsWrapper({ user, post }: Props) {
 
     setSort(sortType);
     setComments([...sortedComments!]);
+    commentsCached.set("sort", sortType);
   };
 
   return (

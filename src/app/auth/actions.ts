@@ -245,17 +245,17 @@ export async function uploadAvatar( formData: FormData, pathname:string): Promis
   };
 }
 
-export async function getSetupDetails(
+export async function getSetupDetails<T>(
   username: string,
   userType?: AuthUser["userType"]
 ) {
   userType = userType || "viber";
 
   if (userType === "viber") {
-    return await getViberDetails(undefined, undefined, username);
+    return (await getViberDetails(undefined, undefined, username)) as T;
   }
   if (userType === "user") {
-    return await getSupporterDetails(undefined, undefined, username);
+    return (await getSupporterDetails(undefined, undefined, username)) as T;
   }
 }
 

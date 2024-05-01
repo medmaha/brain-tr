@@ -21,7 +21,7 @@ export default function ViberSetup(props: Props) {
   const [viber, setViber] = useState<ViberDetailsInterface>();
 
   useEffect(() => {
-    getSetupDetails(props.user.username)
+    getSetupDetails<ViberDetailsInterface>(props.user.username)
       .then((viber) => setViber(viber))
       .catch((e) => console.log(e));
   }, [props.user]);

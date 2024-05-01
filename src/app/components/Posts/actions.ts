@@ -8,6 +8,7 @@ import {
 } from "@/server/controllers/comments";
 import DB from "@/server/db/connection";
 import { CommentInterface, comments } from "@/server/models/comment_and_likes";
+import { posts } from "@/server/models/posts";
 import { sql } from "drizzle-orm";
 
 // prettier-ignore
@@ -21,9 +22,6 @@ export async function makeComment(formData: FormData): Promise<ActionReturn<Comm
     }
     const postSlug = formData.get("post_slug")?.toString();
     const commentType = formData.get("comment_type")?.toString() as any;
-
-    console.log(commentType, postSlug)
-
 
     if (!commentType || !postSlug) {
         return {
@@ -43,17 +41,20 @@ export async function makeComment(formData: FormData): Promise<ActionReturn<Comm
             success: false,
             message: "Error uploading file",
         }
-    }
+    }   
 
-    const user = (await DB.query.users.findFirst({ where: sql`username=${auth.username}` }))!
+    const user = (await DB.query.users.findFirst({ where: sql`username=${auth.username}`}))!
+    const [rows] = await Promise.all([
+      DB.insert(comments,).values({
+        text,
+        fileUrl,
+        postSlug,
+        commentType,
+        authorId: user.id,
+      }).returning(),
+      DB.update(posts).set({commentsCount: sql`comments_count + 1`}).where(sql`slug=${postSlug}`)
+    ])
 
-    const rows = await DB.insert(comments,).values({
-      text,
-      fileUrl,
-      postSlug,
-      commentType,
-      authorId: user.id,
-    }).returning()
 
     return {
         success:true,

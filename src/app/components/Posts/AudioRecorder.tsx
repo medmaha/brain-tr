@@ -12,6 +12,7 @@ import {
 import { useRef, useState } from "react";
 
 type Props = {
+  disabled: boolean;
   recording: boolean;
   sendFile: (file: File) => Promise<boolean>;
   setRecording: (recording: boolean) => void;
@@ -19,7 +20,6 @@ type Props = {
 
 // prettier-ignore
 export default function AudioRecorder({recording, setRecording, ...props}: Props) {
-
   const [state, setState] = useState<MediaRecorder["state"]>();
 
   const [audio, setAudio] = useState<HTMLAudioElement>();
@@ -200,15 +200,15 @@ export default function AudioRecorder({recording, setRecording, ...props}: Props
   return (
     <>
       <button
-      disabled={sending}
+        disabled={sending || props.disabled}
         onClick={record}
-        className={` inline-block p-0.5 border ${
-          recording ? "border-red-400" : ""
+        className={`inline-block p-0.5 border ${
+          recording ? "border-red-400 bg-red-500/10 animate-pulse shadow" : ""
         } border-opacity-80 rounded-full text-sm inline-flex items-center justify-center`}
         title="Voice Message"
       >
         <Mic
-          className={`${recording ? "text-red-400" : ""}`}
+          className={`${recording ? "text-red-400 animate-pulse" : ""}`}
           width={15}
           height={15}
         />

@@ -44,7 +44,7 @@ export default function Form({ file_type }: Props) {
             minLength={5}
             maxLength={500}
             placeholder="Write a caption..."
-            className="border-b invalid:focus:border-red-400 rounded-b-none min-h-[38px] h-[38px] max-h-[250px] appearance-none w-full py-2 px-1 dark:placeholder:text-gray-300 dark:text-gray-200 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            className="!border-b bg-transparent invalid:focus:border-red-400 rounded-b-none min-h-[38px] h-[38px] max-h-[250px] appearance-none w-full py-2 px-1 dark:placeholder:text-gray-300 dark:text-gray-200 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             id="caption"
           ></textarea>
         </div>

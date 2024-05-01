@@ -13,6 +13,24 @@ const config: Config = {
         warning: "rgba(251,146,60,1)",
         primaryHover: "rgba(14,165,233,0.9);",
       },
+      animation: {
+        "translate-left-and-right":
+          "translate-left-and-right 4s linear infinite",
+      },
+      keyframes: {
+        "translate-left-and-right": {
+          "0%": {
+            width: "0",
+          },
+          "50%": {
+            width: "100%",
+          },
+          "100%": {
+            width: "0",
+            background: "transparent",
+          },
+        },
+      },
     },
   },
   plugins: [],

@@ -3,25 +3,17 @@ import { PostFeedsInterface } from "@/server/controllers/posts";
 import {
   Heart,
   ImageIcon,
-  Loader2,
   LucideBookmark,
   MessageCircle,
   Send,
   Share2,
-  SortAscIcon,
-  User2,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import AudioRecorder from "./AudioRecorder";
-import { getComments, makeComment } from "./actions";
+import { makeComment } from "./actions";
 import toast from "react-hot-toast";
-import { CommentInterface } from "@/server/models/comment_and_likes";
-import { CommentListInterface } from "@/server/controllers/comments";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
-import VoiceComment from "./VoiceComment";
-import { format, formatDistance } from "date-fns";
-import TextComment from "./TextComment";
+import { format } from "date-fns";
 import CommentsWrapper from "./CommentsWrapper";
 
 type Props = {
@@ -29,33 +21,56 @@ type Props = {
   post: PostFeedsInterface;
 };
 
-const commentsCached = new Map();
-
 // Post Card for individual posts
 export default function PostActions({ post, user }: Props) {
   const router = useRouter();
-  const [recording, setRecording] = useState(false);
-  const [openComments, toggleOpenComments] = useState(false);
   const commentRef = useRef<HTMLTextAreaElement>(null);
+
+  const [submitting, toggleSubmitting] = useState(false);
+  const [recording, setRecording] = useState(false);
   const [textAreaValid, setTextAreaValid] = useState(false);
+  const [openComments, toggleOpenComments] = useState(false);
+
+  const [counts, setCounts] = useState({
+    likes: post.likesCount,
+    comments: post.commentsCount,
+  });
 
   async function submitForm(formData: FormData) {
+    if (submitting) {
+      toast.loading("Please wait...");
+      return false;
+    }
     if (!user?.username) {
       router.push("/auth/login");
       return false;
     }
     formData.append("post_slug", post.slug!);
     try {
+      toggleSubmitting(true);
       const response = await makeComment(formData);
+      toggleSubmitting(false);
       if (response.success) {
-        toast.success("Comment created");
+        const author = {
+          name: user.name,
+          avatar: user.avatar,
+          username: user.username,
+        };
+        const comment = response.data as any;
+        comment.author = author;
+
+        const newEvent = new CustomEvent("new-comment", { detail: comment });
+        document.dispatchEvent(newEvent);
+        setCounts((prev) => ({ ...prev, comments: prev.comments || 0 + 1 }));
         return true;
       }
       toast.error(response.message);
       return false;
-    } catch (error) {
-      toast.error("Error uploading audio");
+    } catch ({ message }: any) {
+      toast.error(message);
       return false;
+    } finally {
+      toggleSubmitting(false);
     }
   }
 
@@ -69,6 +84,7 @@ export default function PostActions({ post, user }: Props) {
     formData.append("comment_type", "audio");
     return submitForm(formData);
   };
+
   const submitTextComment = async () => {
     if (!textAreaValid) {
       toast.error("Comments cannot be empty");
@@ -90,10 +106,12 @@ export default function PostActions({ post, user }: Props) {
         <div className="flex items-center gap-3">
           <button className="text-red-300 p-0.5 px-2 inline-flex items-center gap-1 outline outline-1 outline-red-300 rounded-full">
             <Heart
-              width={14}
+              width={15}
               className={`${openComments ? "fill-red-300" : ""}`}
             />
-            <small className="font-light text-[10px] opacity-80">124</small>
+            <small className="font-light text-[10px] opacity-80">
+              {counts.likes}
+            </small>
           </button>
           <button
             className={`text-sky-300 transition-all p-0.5 px-2 inline-flex items-center gap-1 outline ${
@@ -102,7 +120,7 @@ export default function PostActions({ post, user }: Props) {
             onClick={() => toggleOpenComments((p) => !p)}
           >
             <MessageCircle
-              width={18}
+              width={15}
               className={`${openComments ? "fill-sky-300" : ""}`}
             />
             <small
@@ -110,12 +128,12 @@ export default function PostActions({ post, user }: Props) {
                 openComments ? "" : "opacity-80"
               } font-light text-[10px]`}
             >
-              124
+              {counts.comments}
             </small>
           </button>
           <button className="text-green-300 p-0.5 px-2 inline-flex items-center gap-1 outline outline-1 outline-green-300 rounded-full">
             <LucideBookmark
-              width={18}
+              width={15}
               className={`${openComments ? "fill-green-300" : ""}`}
             />
             <small className="font-light text-[10px] opacity-80">124</small>
@@ -123,7 +141,7 @@ export default function PostActions({ post, user }: Props) {
         </div>
         <button className="text-orange-300 p-0.5 px-2 inline-flex items-center gap-1 outline outline-1 outline-orange-300 rounded-full">
           <Share2
-            width={18}
+            width={15}
             className={`${openComments ? "fill-orange-300" : ""}`}
           />
           <small className="font-light text-[10px] opacity-80">124</small>
@@ -134,24 +152,44 @@ export default function PostActions({ post, user }: Props) {
         <>
           <div className="mt-4 relative h-max flex">
             <textarea
+              readOnly={recording || submitting}
               ref={commentRef}
-              className="input flex-1 resize-none relative w-full m-0 p-2 text-sm pr-9 min-h-[70px]"
-              autoFocus
+              className="input read-only:cursor-not-allowed flex-1 resize-none relative w-full m-0 p-2 text-sm pr-9 min-h-[70px]"
               disabled={recording}
               placeholder={!recording ? "Add a comment..." : ""}
               onChange={async ({ target: { value } }) => {
                 setTextAreaValid(value?.length > 0);
               }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  submitTextComment();
+                }
+              }}
             ></textarea>
+
+            {submitting && (
+              <div className="absolute bottom-0 left-0 w-[calc(100%-36px)] overflow-hidden rounded-b-md">
+                <div className="animate-translate-left-and-right h-[2px] rounded shadow bg-primary"></div>
+              </div>
+            )}
 
             <div className="w-9 h-[90%]">
               <div className="flex justify-evenly h-full gap-1 flex-col items-center p-0.5 py-1">
                 <AudioRecorder
+                  disabled={recording || submitting}
                   recording={recording}
-                  setRecording={setRecording}
-                  sendFile={submitVoiceComment}
+                  setRecording={(value) => {
+                    if (submitting) return;
+                    setRecording(value);
+                  }}
+                  sendFile={async (file) => {
+                    if (submitting) return false;
+                    return await submitVoiceComment(file!);
+                  }}
                 />
                 <button
+                  disabled={submitting}
                   className="scale-95 h-[20px] w-[20px] border border-opacity-80 rounded-full text-sm inline-flex items-center justify-center"
                   title="Photo Message"
                 >
@@ -159,7 +197,7 @@ export default function PostActions({ post, user }: Props) {
                 </button>
                 <button
                   onClick={() => submitTextComment()}
-                  disabled={textAreaValid === false}
+                  disabled={textAreaValid === false || submitting}
                   className="scale-95 h-[20px] group hover:bg-primary transition-all disabled:border-gray-500/40 border-primaryHover w-[20px] border border-opacity-80 rounded-full text-sm inline-flex items-center justify-center"
                   title="Text Comment"
                 >

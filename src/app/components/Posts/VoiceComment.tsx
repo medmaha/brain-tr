@@ -86,13 +86,13 @@ export default function VoiceComment({ src }: Props) {
               className="p-1 rounded-full bg-gray-200 dark:bg-gray-700 transition-all hover:bg-primary focus:outline-none focus:ring-2 focus:ring-primary-400 dark:focus:ring-primary-600"
             >
               {playing ? (
-                <Pause width={18} height={18} />
+                <Pause width={16} height={16} />
               ) : (
-                <Play width={18} height={18} />
+                <Play width={16} height={16} />
               )}
             </button>
             <button className="p-1 rounded-full bg-gray-200 dark:bg-gray-700 transition-all hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-400 dark:focus:ring-primary-600">
-              <Volume2 width={18} height={18} />
+              <Volume2 width={16} height={16} />
             </button>
           </div>
           <div className="flex-1 flex items-center gap-2 h-max">
@@ -120,10 +120,10 @@ export default function VoiceComment({ src }: Props) {
           </div>
           <div className="flex items-center gap-2">
             <button className="p-1 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-600">
-              <ThumbsUp width={18} height={18} />
+              <ThumbsUp width={16} height={16} />
             </button>
             <button className="p-1 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-600">
-              <Forward width={18} height={18} />
+              <Forward width={16} height={16} />
             </button>
           </div>
         </div>
