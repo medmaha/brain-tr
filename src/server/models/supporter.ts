@@ -9,26 +9,21 @@ import {
 } from "drizzle-orm/pg-core";
 import { users } from "./users";
 
-export const viber = pgTable("viber", {
+export const supporter = pgTable("supporter", {
   id: serial("id").primaryKey(),
   genres: text("genres").notNull(),
   userId: integer("user_id").notNull(),
-  youtube: varchar("youtube", { length: 256 }),
-  facebook: varchar("facebook", { length: 256 }),
-  instagram: varchar("instagram", { length: 256 }),
-  category: varchar("category", { enum: ["artists"] }).notNull(),
-
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at")
     .notNull()
     .default(sql`now()`),
 });
 
-export const viberRelations = relations(viber, ({ one }) => ({
+export const supporterRelations = relations(supporter, ({ one }) => ({
   user: one(users, {
-    fields: [viber.userId],
+    fields: [supporter.userId],
     references: [users.id],
   }),
 }));
 
-export type ViberInterface = typeof viber.$inferSelect;
+export type SupporterInterface = typeof supporter.$inferSelect;

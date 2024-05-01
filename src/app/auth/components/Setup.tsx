@@ -1,8 +1,9 @@
-import { Info, Music, NfcIcon } from "lucide-react";
+import { HandHeartIcon, Info, Music, NfcIcon } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 import BackButton from "./BackButton";
 import ViberSetup from "./ViberSetup";
+import SupporterSetup from "./SupporterSetup";
 
 type Props = {
   user: AuthUser | null;
@@ -28,7 +29,15 @@ export default function Setup(props: Props) {
               "In this module, we'll help you setup your account"}
           </p>
         </div>
+        {!!props.searchParams.user && !props.user.userType && (
+          <div className="">
+            <p className="sm:text-lg lg:text-xl font-semibold capitalize opacity-80">
+              {props.searchParams.user}
+            </p>
+          </div>
+        )}
         {!!props.searchParams.user && !props.user.userType && <BackButton />}
+
         {!props.searchParams.user && (
           <h3 className="text-xl font-bold hidden sm:inline-block">
             Account Setup
@@ -48,10 +57,10 @@ export default function Setup(props: Props) {
                 />
               </button>
             </Link>
-            <Link href={"/auth/setup?user=listener"} className="flex-1 w-full">
+            <Link href={"/auth/setup?user=supporter"} className="flex-1 w-full">
               <button className="p-2  group inline-flex w-full items-center gap-2 justify-center text-lg rounded sm:p-4 sm:rounded-md flex-1 bg-orange-500 hover:bg-orange-500/90">
-                I am a Listener{" "}
-                <NfcIcon
+                I am a Supporter{" "}
+                <HandHeartIcon
                   size={24}
                   className="text-primary group-hover:text-primaryHover"
                 />
@@ -62,15 +71,27 @@ export default function Setup(props: Props) {
         {props.searchParams.user === "viber" && (
           <>
             <div className="my-4 pb-4 w-full">
-              {props.searchParams.user === "viber" &&
-                !props.searchParams.avatar && (
-                  <p className="text-center w-full opacity-90 pb-6 border-b md:w-max mx-auto px-4">
-                    <Info className="inline text-primary mr-2" /> Please fill in
-                    the following information to complete your account setup
-                  </p>
-                )}
+              {!props.searchParams.avatar && (
+                <p className="text-center w-full opacity-90 pb-6 border-b md:w-max mx-auto px-4">
+                  <Info className="inline text-primary mr-2" /> Please fill in
+                  the following information to complete your account setup
+                </p>
+              )}
             </div>
             <ViberSetup user={props.user} />
+          </>
+        )}
+        {props.searchParams.user === "supporter" && (
+          <>
+            <div className="my-4 pb-4 w-full">
+              {!props.searchParams.avatar && (
+                <p className="text-center w-full opacity-90 pb-6 border-b md:w-max mx-auto px-4">
+                  <Info className="inline text-primary mr-2" /> Please fill in
+                  the following information to complete your account setup
+                </p>
+              )}
+            </div>
+            <SupporterSetup user={props.user} />
           </>
         )}
       </div>

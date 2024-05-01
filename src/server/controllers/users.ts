@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import DB from "../db/connection";
 import { users } from "../models/users";
 import { viber } from "../models/viber";
+import { supporter } from "../models/supporter";
 
 export async function authenticate(data: LoginProps) {
   let query;
@@ -30,11 +31,11 @@ export async function createUser(data:any){
   
   const phoneExists = await DB.query.users.findFirst({where: sql`phone=${data.phone}`})
   if (phoneExists){
-    return "This phone number was already registered, please enter your phone number"
+    return "This phone number was already registered"
   }
   const usernameExists = await DB.query.users.findFirst({where: sql`username=${data.username}`})
   if (usernameExists){
-    return  "This username was already exists, please enter your username"
+    return  "A user with this username already exists"
   }
 
   try {
@@ -63,6 +64,29 @@ export async function setupUserAccount(username:string, data:any){
   }
 
   if (data.userType === "viber"){
+    try {
+      const supporterExists = await DB.query.viber.findFirst({where: sql`user_id=${user.id}`})
+      if (supporterExists){
+        return "User profile already exists"
+      }
+      const promises = [
+        DB.insert(supporter).values({
+          userId: user.id,
+          genres: data.genres,
+        }),
+        DB.update(users).set({
+          avatar: data.avatar || null,
+          biography: data.bio || "",
+          userType: data.userType || "viber",
+        }).where(sql`id=${user.id}`)
+      ]
+      await Promise.all(promises)
+      return 0
+    } catch (error) {
+      return "Failed to create user. Please try again"
+    }
+  }
+  else if (data.userType === "user"){
     try {
       const viberExists = await DB.query.viber.findFirst({where: sql`user_id=${user.id}`})
       if (viberExists){

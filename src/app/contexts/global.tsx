@@ -11,16 +11,23 @@ type GlobalContextProviderProps = {
 // prettier-ignore
 export default function GlobalContextProvider(props: GlobalContextProviderProps) {
   const [user, setUser] = React.useState(props.user);
-
+  
   function updateUser(_user: AuthUser) {}
 
   return (
     <GlobalContext.Provider value={{ user, updateUser }}>
       {props.children}
       <Toaster 
-      toastOptions={{ duration: 5000 }} 
-      containerClassName="w-full" 
-      />
+        toastOptions={{ duration: 5000 }} 
+        containerClassName="w-full" 
+        containerStyle={{
+          maxWidth: "600px",
+          margin: "0 auto",
+          width: "100%", 
+          textAlign:"center"
+        }}
+      >
+      </Toaster>
     </GlobalContext.Provider>
   );
 }

@@ -12,7 +12,7 @@ const getAudio = () => {
   return _audio;
 };
 
-export default function VoiceNotePlayer({ src }: Props) {
+export default function VoiceComment({ src }: Props) {
   const progressRef = useRef<HTMLDivElement>(null);
   const [audio, setAudio] = useState<HTMLAudioElement>();
   const [playing, setPlaying] = useState(false);
@@ -75,7 +75,7 @@ export default function VoiceNotePlayer({ src }: Props) {
 
   return (
     <>
-      <div className="dark:bg-black/20 bg-gray-400 p-0.5 rounded-full w-full">
+      <div className="dark:bg-black/20 bg-gray-400 p-1 rounded-full w-full">
         <div className="flex items-center justify-between gap-2">
           <div className="flex gap-2 items-center">
             <button

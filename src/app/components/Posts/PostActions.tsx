@@ -8,6 +8,7 @@ import {
   MessageCircle,
   Send,
   Share2,
+  SortAscIcon,
   User2,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -18,8 +19,10 @@ import { CommentInterface } from "@/server/models/comment_and_likes";
 import { CommentListInterface } from "@/server/controllers/comments";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import VoiceNotePlayer from "./VoiceNotePlayer";
+import VoiceComment from "./VoiceComment";
 import { format, formatDistance } from "date-fns";
+import TextComment from "./TextComment";
+import CommentsWrapper from "./CommentsWrapper";
 
 type Props = {
   user?: AuthUser;
@@ -33,33 +36,19 @@ export default function PostActions({ post, user }: Props) {
   const router = useRouter();
   const [recording, setRecording] = useState(false);
   const [openComments, toggleOpenComments] = useState(false);
-  const [loadingComments, setLoadingComments] = useState(false);
-  const [comments, setComments] = useState<CommentListInterface>();
+  const commentRef = useRef<HTMLTextAreaElement>(null);
+  const [textAreaValid, setTextAreaValid] = useState(false);
 
-  const submitVoiceComment = async (file: File): Promise<boolean> => {
+  async function submitForm(formData: FormData) {
     if (!user?.username) {
       router.push("/auth/login");
       return false;
     }
-
-    const formData = new FormData();
-    formData.append("file", file);
     formData.append("post_slug", post.slug!);
-    formData.append("comment_type", "audio");
     try {
       const response = await makeComment(formData);
       if (response.success) {
-        setComments((p) => [
-          ...(p || []),
-          {
-            ...response.data,
-            author: {
-              name: user?.name,
-              avatar: user?.avatar,
-              username: user?.username,
-            } as any,
-          },
-        ]);
+        toast.success("Comment created");
         return true;
       }
       toast.error(response.message);
@@ -68,34 +57,35 @@ export default function PostActions({ post, user }: Props) {
       toast.error("Error uploading audio");
       return false;
     }
+  }
+
+  const submitVoiceComment = async (file: File): Promise<boolean> => {
+    if (!file) {
+      toast.error("Audio file not found");
+      return false;
+    }
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("comment_type", "audio");
+    return submitForm(formData);
+  };
+  const submitTextComment = async () => {
+    if (!textAreaValid) {
+      toast.error("Comments cannot be empty");
+      return false;
+    }
+    const formData = new FormData();
+    formData.append("text", commentRef.current?.value!);
+    formData.append("comment_type", "text");
+    const created = await submitForm(formData);
+    if (created && commentRef.current) {
+      commentRef.current.value = "";
+      setTextAreaValid(false);
+    }
   };
 
-  useEffect(() => {
-    return () => {
-      commentsCached.clear();
-    };
-  }, []);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoadingComments(true);
-      if (commentsCached.has(post.slug!)) {
-        setComments(commentsCached.get(post.slug!));
-        setLoadingComments(false);
-        return;
-      }
-      const response = await getComments(post.slug!);
-      if (response.success) {
-        setComments([...response.data, ...response.data]);
-        commentsCached.set(post.slug!, response.data);
-      }
-      setLoadingComments(false);
-    };
-    if (openComments) fetchData();
-  }, [post.slug, openComments]);
-
   return (
-    <div className={`${comments?.length && openComments ? "p-2" : "pb-4"}}`}>
+    <div className={`pb-2`}>
       <div className="flex items-center justify-between gap-3 px-1">
         <div className="flex items-center gap-3">
           <button className="text-red-300 p-0.5 px-2 inline-flex items-center gap-1 outline outline-1 outline-red-300 rounded-full">
@@ -144,10 +134,14 @@ export default function PostActions({ post, user }: Props) {
         <>
           <div className="mt-4 relative h-max flex">
             <textarea
+              ref={commentRef}
               className="input flex-1 resize-none relative w-full m-0 p-2 text-sm pr-9 min-h-[70px]"
               autoFocus
               disabled={recording}
               placeholder={!recording ? "Add a comment..." : ""}
+              onChange={async ({ target: { value } }) => {
+                setTextAreaValid(value?.length > 0);
+              }}
             ></textarea>
 
             <div className="w-9 h-[90%]">
@@ -159,101 +153,56 @@ export default function PostActions({ post, user }: Props) {
                 />
                 <button
                   className="scale-95 h-[20px] w-[20px] border border-opacity-80 rounded-full text-sm inline-flex items-center justify-center"
-                  title="Voice Message"
+                  title="Photo Message"
                 >
                   <ImageIcon className="text-white" width={15} height={15} />
                 </button>
                 <button
-                  className="scale-95 h-[20px] w-[20px] border border-opacity-80 rounded-full text-sm inline-flex items-center justify-center"
-                  title="Voice Message"
+                  onClick={() => submitTextComment()}
+                  disabled={textAreaValid === false}
+                  className="scale-95 h-[20px] group hover:bg-primary transition-all disabled:border-gray-500/40 border-primaryHover w-[20px] border border-opacity-80 rounded-full text-sm inline-flex items-center justify-center"
+                  title="Text Comment"
                 >
-                  <Send className="text-white" width={15} height={15} />
+                  <Send
+                    className="text-primary group-disabled:text-white group-hover:text-white"
+                    width={14}
+                    height={14}
+                  />
                 </button>
               </div>
             </div>
           </div>
 
-          {loadingComments && (
-            <div className="pt-6 justify-center items-center flex">
-              <Loader2 className="w-6 h-6 animate-spin text-primary" />
-            </div>
-          )}
-          {comments && (
-            <div className="mt-4 border-t">
-              <h4 className="font-semibold text-sm pt-2 pb-0.5">
-                Comments {comments.length}
-              </h4>
-              {comments.map((comment) => (
-                <div className="" key={comment.id}>
-                  <div className="border-t mt-2 pt-4 odd:pb-1.5">
-                    <div className="flex items-center space-x-2">
-                      <div className="flex w-8 h-8 border rounded-full overflow-hidden">
-                        {comment.author?.avatar && (
-                          <Image
-                            width={32} // Set width and height to maintain aspect ratio
-                            height={32}
-                            src={comment.author.avatar}
-                            alt="avatar"
-                            className="w-full h-full rounded-full comment-author-img"
-                          />
-                        )}
-                        {!comment.author?.avatar && (
-                          <div className="h-full w-full dark:bg-black/30 flex items-center justify-center">
-                            <User2 width={28} height={28} />
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex flex-col">
-                        <p className="font-semibold text-xs">
-                          {comment.author?.name}
-                        </p>
-                        <p className="text-xs opacity-70">
-                          @{comment.author?.username}
-                        </p>
-                      </div>
-                    </div>
-                    {comment.commentType === "text" && (
-                      <p className="text-sm mt-1">
-                        {comment.text || "No content provided"}
-                      </p>
-                    )}
-                    {comment.commentType === "image" && (
-                      <div className="">Image</div>
-                    )}
-                    {comment.commentType === "audio" && (
-                      <div className="gap-2 mt-2 space-y-1">
-                        <VoiceNotePlayer src={comment.fileUrl!} />
-                        <div className="text-xs gap-2 text-nowrap opacity-60 flex justify-between">
-                          <p className="text-nowrap pl-2 flex justify-between">
-                            <small>
-                              {format(new Date(comment.updatedAt), "PPp", {
-                                firstWeekContainsDate: 4,
-                                weekStartsOn: 5,
-                              })}
-                            </small>
-                          </p>
-                          <div className="flex items-center gap-4">
-                            <p>
-                              <small>
-                                Likes <b>{comment.likesCount}</b>
-                              </small>
-                            </p>
-                            <p>
-                              <small>
-                                Replies <b>{comment.likesCount}</b>
-                              </small>
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          <CommentsWrapper user={user} post={post} />
         </>
       )}
+    </div>
+  );
+}
+
+function CommentDate({ comment }: any) {
+  return (
+    <div className="text-xs gap-2 text-nowrap opacity-60 flex justify-between">
+      <p className="text-nowrap pl-2 flex justify-between">
+        <small>
+          {format(new Date(comment.updatedAt), "PPp", {
+            firstWeekContainsDate: 4,
+            weekStartsOn: 5,
+          })}
+        </small>
+      </p>
+      <div className="flex items-center gap-4">
+        <p>
+          <small>
+            Likes <b>{comment.likesCount}</b>
+          </small>
+        </p>
+        <p>
+          <small>
+            Replies <b>{comment.likesCount}</b>
+          </small>
+        </p>
+      </div>
     </div>
   );
 }

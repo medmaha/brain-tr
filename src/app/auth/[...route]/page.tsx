@@ -10,8 +10,6 @@ export default async function Page(props: PageProps) {
   const route = (props.params.route || [])[0];
   const user = getAuthenticatedUser();
 
-  console.log(route, props.searchParams);
-
   if (route === "setup" && !props.searchParams.avatar)
     return <Setup user={user} searchParams={props.searchParams} />;
 

@@ -6,6 +6,7 @@ import {
   setAuthenticatedUser,
 } from "@/lib/auth";
 import { uploadFile } from "@/lib/firebase/uploader";
+import { getSupporterDetails } from "@/server/controllers/supporter";
 import {
   authenticate,
   createUser,
@@ -54,7 +55,6 @@ export async function doSignOut(pathname: string): Promise<ActionReturn<null>> {
   const signedOut = clearAuthenticatedUser();
   if (signedOut) {
     revalidatePath(pathname, "layout");
-
     return {
       success: true,
       data: null,
@@ -111,18 +111,21 @@ export async function doRegister(formData: FormData, path: string): Promise<Acti
     password,
   })
 
-  if (!response){
-    return {
-      success: false,
-      message: "Failed to create user. Please try again",
-    }
-  }
+  console.log("response:", response)
+
 
   if (typeof response === "string") {
     return {
       success: false,
       message: response,
     };
+  }
+
+  if (response !== 0){
+    return {
+      success: false,
+      message: "Failed to create user. Please try again",
+    }
   }
 
   setAuthenticatedUser({
@@ -249,8 +252,11 @@ export async function getSetupDetails(
   userType = userType || "viber";
 
   if (userType === "viber") {
+    return await getViberDetails(undefined, undefined, username);
   }
-  return await getViberDetails(undefined, undefined, username);
+  if (userType === "user") {
+    return await getSupporterDetails(undefined, undefined, username);
+  }
 }
 
 function verifyPhoneNumber(phone: string) {
