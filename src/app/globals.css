@@ -17,6 +17,7 @@
   }
   .border,
   .border-b,
+  .border-l,
   .border-t {
     @apply dark:border-stone-600;
   }

@@ -1,4 +1,4 @@
-import PostsWrapper from "@/app/components/Posts";
+import PostsWrapper from "@/app/posts/components";
 import { getPostFeeds } from "@/server/controllers/posts";
 
 export default async function Page(props: PageProps) {

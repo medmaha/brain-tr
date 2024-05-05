@@ -3,13 +3,20 @@ import { users } from "./users";
 import { followers, followerRelations } from "./followers";
 import { viber, viberRelations } from "./viber";
 import { supporter, supporterRelations } from "./supporter";
-import { likes, comments, commentsRelations } from "./comment_and_likes";
+import {
+  comments,
+  replies,
+  repliesRelations,
+  commentsRelations,
+} from "./comments";
+import { likes } from "./likes";
 
 const relations = {
   viberRelations,
   postsRelations,
   commentsRelations,
   followerRelations,
+  repliesRelations,
   supporterRelations,
 };
 
@@ -20,6 +27,7 @@ const schema = {
   viber,
   supporter,
   likes,
+  replies,
   followers,
   ...relations,
 };

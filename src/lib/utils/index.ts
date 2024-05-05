@@ -1,3 +1,18 @@
+import { twMerge } from "tailwind-merge";
+import clsx from "clsx";
+
+type CnArgs = string | undefined;
+
+/**
+ * Merges tailwind classes
+ * @param  {string[]} args
+ * @returns
+ */
+
+export function cn(...args: CnArgs[]) {
+  return twMerge(clsx(args));
+}
+
 /**
  * Generates a unique string based on the current time.
  * @returns string

@@ -23,13 +23,15 @@ export async function toggleUserFollow(_follower: string, _following: string) {
   if (followed) {
     await Promise.all([
       DB.delete(followers_model).where(sql`follower_id=${follower.id} and user_id=${following.id}`),
-      DB.update(users).set({ followersCount: sql`followers_count - 1` }).where(sql`id=${following.id}`)
+      DB.update(users).set({ followersCount: sql`followers_count - 1` }).where(sql`id=${follower.id}`),
+      DB.update(users).set({ followingCount: sql`following_count - 1` }).where(sql`id=${following.id}`),
     ])
     return 0
   }
 
   await Promise.all([
     DB.insert(followers_model).values({ userId: following.id, followerId: follower.id}),
+    DB.update(users).set({ followingCount: sql`following_count + 1` }).where(sql`id=${follower.id}`),
     DB.update(users).set({ followersCount: sql`followers_count + 1` }).where(sql`id=${following.id}`)
   ])
   return 1

@@ -47,8 +47,8 @@ export default function Posts(props: Props) {
           key={index}
         >
           <Image
-            width={200}
-            height={300}
+            width={350}
+            height={200}
             src={post.thumbnailUrl || post.fileUrl}
             alt="Post Image"
             objectFit="cover"

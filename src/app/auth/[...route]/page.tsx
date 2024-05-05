@@ -18,7 +18,6 @@ export default async function Page(props: PageProps) {
 
   return (
     <div className="max-w-[500px] mx-auto mt-4">
-      {route}
       {route === "login" && <LoginForm />}
       {route === "register" && <RegisterForm />}
       {route === "setup" && (

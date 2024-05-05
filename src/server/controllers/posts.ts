@@ -23,7 +23,7 @@ export async function getPostFeeds(limit = 10, page = 1, sort = "desc") {
   return posts.reverse();
 }
 
-export async function getPostDetail(slug: string, page: any) {
+export async function getPostDetail(slug: string) {
   const posts = await DB.query.posts.findFirst({
     where: sql`slug=${slug}`,
     columns: {
@@ -36,6 +36,42 @@ export async function getPostDetail(slug: string, page: any) {
           username: true,
           avatar: true,
           slug: true,
+        },
+      },
+      comments: {
+        columns: {
+          authorId: false,
+          createdAt: false,
+        },
+        with: {
+          author: {
+            columns: {
+              name: true,
+              username: true,
+              avatar: true,
+              slug: true,
+            },
+          },
+          replies: {
+            columns: {
+              authorId: false,
+              // repliesCount: false,
+              createdAt: false,
+            },
+            with: {
+              author: {
+                columns: {
+                  name: true,
+                  avatar: true,
+                  username: true,
+                },
+              },
+            },
+
+            orderBy(reply, { asc }) {
+              return [asc(reply.updatedAt)];
+            },
+          },
         },
       },
     },

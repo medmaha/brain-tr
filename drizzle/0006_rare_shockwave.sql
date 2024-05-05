@@ -1,1 +1,0 @@
-ALTER TABLE "comments" ALTER COLUMN "caption" DROP NOT NULL;

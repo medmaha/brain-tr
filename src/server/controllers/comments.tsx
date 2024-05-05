@@ -10,12 +10,34 @@ export async function getPostComments(slug: string, limit = 15, page = 1) {
       authorId: false,
       createdAt: false,
     },
+
     with: {
       author: {
         columns: {
           name: true,
           avatar: true,
           username: true,
+        },
+      },
+      replies: {
+        columns: {
+          authorId: false,
+          // repliesCount: false,
+          createdAt: false,
+        },
+        with: {
+          author: {
+            columns: {
+              name: true,
+              avatar: true,
+              username: true,
+            },
+          },
+        },
+        limit,
+
+        orderBy(reply, { asc }) {
+          return [asc(reply.updatedAt)];
         },
       },
     },
@@ -27,3 +49,5 @@ export async function getPostComments(slug: string, limit = 15, page = 1) {
 export type CommentListInterface = Awaited<
   Promise<ReturnType<typeof getPostComments>>
 >;
+
+export type CommentReplyInterface = CommentListInterface[0]["replies"][0];

@@ -1,7 +1,6 @@
 "use client";
 import { doSignOut } from "@/app/auth/actions";
 import AuthCard from "@/app/auth/components/AuthCard";
-import { useRouter } from "next/navigation";
 import React from "react";
 import { useRef } from "react";
 import toast from "react-hot-toast";
@@ -12,20 +11,21 @@ type Props = {
 };
 
 export default function Logout(props: Props) {
-  const router = useRouter();
   const toastId = useRef<string>();
 
   const logout = async () => {
     toast.dismiss(toastId.current!);
 
-    const response = await doSignOut(location.pathname);
-    if (response.success) {
-      toastId.current = toast.success(response.message, { duration: 5_000 });
-      router.replace("/");
-      cancel();
-      return;
+    try {
+      await doSignOut(location.pathname);
+      toastId.current = toast.success("You've successfully logged out", {
+        duration: 5_000,
+      });
+    } catch (error) {
+      toastId.current = toast.error("Logout failed! Something went wrong", {
+        duration: 5_000,
+      });
     }
-    toastId.current = toast.error(response.message, { duration: 5_000 });
   };
   const cancel = async () => {
     props.toggleLogout(false);

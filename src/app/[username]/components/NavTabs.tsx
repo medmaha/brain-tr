@@ -2,7 +2,7 @@
 import { UserDetailsInterface } from "@/server/controllers/users";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import React from "react";
+import React, { useState } from "react";
 import { ProfileContext } from "../contexts/profile";
 
 type Props = {
@@ -14,15 +14,19 @@ export default function NavTabs({ profile }: Props) {
   const context = React.useContext(ProfileContext);
   const searchParams = useSearchParams();
 
+  const [counts, setCounts] = useState({
+    posts: context.profile?.postsCount,
+    followers: context.profile?.followersCount,
+    following: context.profile?.followingCount,
+  });
+
   return (
     <nav className="card py-4 rounded-xl text-sm max-w-[800px] mx-auto flex justify-center space-x-8">
       <>
         <Link
           className={`${
-            searchParams.get("tab") === "about"
-              ? "text-primary border-b-2 border-primary"
-              : ""
-          } hover:text-primaryHover transition-all`}
+            searchParams.get("tab") === "about" ? "text-primary border-b-2" : ""
+          } border-primary hover:text-primaryHover transition-all`}
           href={`?tab=about`}
         >
           About
@@ -35,7 +39,7 @@ export default function NavTabs({ profile }: Props) {
           } hover:text-primaryHover transition-all`}
           href={`?tab=posts`}
         >
-          Posts {profile?.postsCount}
+          Posts {counts.posts}
         </Link>
         <Link
           className={`${
@@ -45,7 +49,7 @@ export default function NavTabs({ profile }: Props) {
           } hover:text-primaryHover transition-all`}
           href={`?tab=followers`}
         >
-          {`Followers ${context.followers && context.followers.length}`}
+          {`Followers ${counts.followers}`}
         </Link>
         <Link
           className={`${
@@ -55,7 +59,7 @@ export default function NavTabs({ profile }: Props) {
           } hover:text-primaryHover transition-all`}
           href={`?tab=following`}
         >
-          {`Following ${context.followings && context.followings.length}`}
+          {`Following ${counts.following}`}
         </Link>
       </>
     </nav>

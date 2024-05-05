@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import VideoUploader from "./VideoUploader";
 import VideoThumbnail from "./VideoThumnail";
 import { ArrowLeft, Loader2, Upload } from "lucide-react";
@@ -56,6 +56,7 @@ export default function CreateVideo() {
   const [thumbnail, setThumbnail] = useState<Blob>();
   const [ready, setReady] = useState(false);
   const [ffmpeg, setFFmpeg] = useState<FFmpeg>();
+  const initialized = useRef(false);
 
   useEffect(() => {
     init();
@@ -76,10 +77,14 @@ export default function CreateVideo() {
   }, []);
 
   async function init() {
+    if (initialized.current) return;
+    initialized.current = true;
     const ffmpeg = await loadFFmpeg();
     if (ffmpeg) {
       setFFmpeg(ffmpeg);
+      return;
     }
+    alert("Failed to load ffmpeg!");
   }
 
   function updateData(key: string, value: string | number) {
@@ -101,7 +106,7 @@ export default function CreateVideo() {
         formData.append("file", file);
         const response = await getVideoData(formData);
         console.log(response);
-        // setFile(file);
+        setFile(file);
       }
     };
     input.click();
@@ -148,7 +153,7 @@ export default function CreateVideo() {
     data.clear();
   }
 
-  let isReady = file && ffmpeg && ready;
+  let isReady = file && ffmpeg?.loaded && ready;
 
   return (
     <div className="max-w-[850px] block shadow-lx mx-auto card border dark:border-gray-500/20 rounded-md">
@@ -174,24 +179,21 @@ export default function CreateVideo() {
                 Setting up your <b>system</b>
               </p>
               <p className="text-xs mt-6 leading-relaxed max-w-[40ch] mx-auto text-center opacity-70">
-                If this is your first time creating a post with <b>video</b>{" "}
+                If this is your first time creating a post with video
                 <br />
-                it will take a few seconds or minutes.
+                this may take some seconds{" "}
               </p>
             </div>
           </div>
         )}
-        {!isReady && ffmpeg && (
+        {!isReady && ffmpeg?.loaded && (
           <div className="flex min-h-[70svh] md:min-h-[60svh] h-full w-full items-center justify-center">
             <div className="grid gap-4 items-center justify-center">
               <div className="flex flex-col gap-1 items-center justify-center">
                 <p className="text-sm md:text-base">Upload a Video</p>
                 {!file && <Upload className="w-6 h-6" />}
                 {file && (
-                  <Loader2
-                    //   stroke="2"
-                    className="w-6 h-6 animate-spin text-sky-500"
-                  />
+                  <Loader2 className="w-6 h-6 animate-spin text-sky-500" />
                 )}
               </div>
               <button
@@ -223,12 +225,15 @@ export default function CreateVideo() {
                   <VideoDetails thumbnail={thumbnail} />
                 </>
               )}
-              <VideoThumbnail
-                video={file}
-                // ffmpeg={ffmpeg!}
-                setReady={setReady}
-                setThumbnail={setThumbnail}
-              />
+              {ffmpeg?.loaded && (
+                <VideoThumbnail
+                  video={file}
+                  ffmpeg={ffmpeg}
+                  setReady={setReady}
+                  thumbnail={thumbnail}
+                  setThumbnail={setThumbnail}
+                />
+              )}
             </div>
           </div>
         )}
@@ -242,11 +247,17 @@ export default function CreateVideo() {
 export const loadFFmpeg = async () => {
   const ffmpeg = new FFmpeg();
   const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
-  await ffmpeg.load({
-    coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
-    wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
-  });
 
-  if (ffmpeg.loaded) return ffmpeg;
-  return null;
+  try {
+    await ffmpeg.load({
+      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
+      wasmURL: await toBlobURL(
+        `${baseURL}/ffmpeg-core.wasm`,
+        "application/wasm"
+      ),
+    });
+    if (ffmpeg.loaded) return ffmpeg;
+  } catch (error) {
+    return null;
+  }
 };

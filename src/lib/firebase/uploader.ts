@@ -42,7 +42,7 @@ export async function uploadFile(imageFile: File | Blob, path: FileType) {
 export async function uploadFileStream(
   imageFile: File,
   path: FileType,
-  cb: (value: number) => void
+  cb: (value: number, cancel: any) => void
 ) {
   return new Promise<string | undefined>(async (resolve) => {
     try {
@@ -55,8 +55,10 @@ export async function uploadFileStream(
       uploadTask.on("state_changed", (snapshot) => {
         if (snapshot.state === "running") {
           cb(
-            Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100)
+            Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100),
+            uploadTask.cancel()
           );
+          uploadTask.cancel();
         }
       });
       const snapshot = await uploadTask;

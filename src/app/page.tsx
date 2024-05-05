@@ -1,5 +1,5 @@
 import { getAuthenticatedUser } from "@/lib/auth";
-import PostsWrapper from "./components/Posts";
+import PostsWrapper from "./posts/components";
 import { getPostFeeds } from "@/server/controllers/posts";
 
 export default async function Page(props: PageProps) {

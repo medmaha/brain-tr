@@ -10,7 +10,8 @@ import {
   timestamp,
   PgTable,
 } from "drizzle-orm/pg-core";
-import { comments, likes } from "./comment_and_likes";
+import { comments } from "./comments";
+import { likes } from "./likes";
 
 // prettier-ignore
 export const posts = pgTable("posts", {

@@ -1,6 +1,5 @@
 import { uploadFileStream } from "@/lib/firebase/uploader";
 import { FFmpeg } from "@ffmpeg/ffmpeg";
-// import fluentFfmpeg from "fluent-ffmpeg";
 import { fetchFile } from "@ffmpeg/util";
 import { Check, Loader2 } from "lucide-react";
 import React, {
@@ -18,6 +17,8 @@ type Props = {
   setVideo: React.Dispatch<React.SetStateAction<File | undefined>>;
 };
 
+let cancelUpload: any = undefined;
+
 export default function VideoUploader(props: Props) {
   const selectedFile = useRef<File>(props.video);
   const uploading = useRef(false);
@@ -27,24 +28,21 @@ export default function VideoUploader(props: Props) {
   const [state, dispatch] = useReducer(reducer, initState);
 
   useEffect(() => {
-    const _file = selectedFile.current;
     return () => {
-      if (_file?.name != props.video.name) {
-        compressing.current = false;
-        uploading.current = false;
-      }
+      try {
+        cancelUpload();
+        props.ffmpeg?.terminate();
+      } catch (error) {}
     };
-  }, [props.video]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const compressVideo = useCallback(
     async (_file?: File) => {
       if (compressing.current) return;
-
       compressing.current = true;
       const video = _file || props.video;
       const ffmpeg = props.ffmpeg;
-
-      if (!ffmpeg?.loaded) await ffmpeg.load();
 
       if (!ffmpeg.loaded) {
         alert("Failed to load ffmpeg!");
@@ -56,49 +54,48 @@ export default function VideoUploader(props: Props) {
       const commands = [
         "-i",
         "input.webm",
-        "-c:v",
-        "copy",
-        "-map_metadata",
-        "-1",
         "-r",
         "25",
         "-vf",
         "scale=940:-2",
         "-crf",
         "30",
-        // "-c:a",
-        // "aac",
+        "-c:a",
+        "aac",
         // "-b:a",
         // "128k",
         "output.mp4",
       ];
 
-      await ffmpeg.exec(commands);
-      const data = await ffmpeg.readFile("output.mp4");
-      await ffmpeg.deleteFile("input.webm");
-      await ffmpeg.deleteFile("output.mp4");
-      const blob = new Blob([data], { type: video?.type });
-      compressing.current = false;
-      return blob;
+      try {
+        await ffmpeg.exec(commands);
+        const data = await ffmpeg.readFile("output.mp4");
+        await Promise.all([
+          ffmpeg.deleteFile("input.webm"),
+          ffmpeg.deleteFile("output.mp4"),
+        ]);
+        const blob = new Blob([data], { type: video?.type });
+        compressing.current = false;
+        return blob;
+      } catch (error) {
+        ffmpeg.terminate();
+      }
     },
-    [props.video, props.ffmpeg]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
   );
 
-  const uploadVideo = useCallback(async () => {
+  const uploadVideo = useCallback(async (file?: any) => {
     if (uploading.current || compressing.current) return;
-    uploading.current = true;
 
-    console.clear();
-    console.time("Compression..");
-    const compressedVideo = (await compressVideo()) as File;
-    console.timeEnd("Compression..");
-    console.table([props.video, compressedVideo]);
-
+    const compressedVideo = (await compressVideo(file)) as File;
     if (!compressedVideo) return;
 
-    const onUploadProgress = (progress: number) => {
+    uploading.current = true;
+
+    const onUploadProgress = (progress: number, cancel: any) => {
+      cancelUpload = cancel;
       if (progress > 99) uploading.current = false;
-      else uploading.current = true;
 
       dispatch({
         type: "progress",
@@ -112,13 +109,15 @@ export default function VideoUploader(props: Props) {
         },
       });
     };
-    console.time("Uploading...");
+
+    // console.time("Uploading...");
     const url = await uploadFileStream(
       compressedVideo,
       "video",
       onUploadProgress
     );
-    console.timeEnd("Uploading...");
+    // console.timeEnd("Uploading...");
+
     if (downloadUrl.current && url) {
       downloadUrl.current.value = url!;
       props.updateData("file_url", url);
@@ -139,15 +138,24 @@ export default function VideoUploader(props: Props) {
         },
       });
     }
+
     return downloadUrl;
-  }, [props, compressVideo]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const callback = ({ progress }: any) => {
+      if (uploading.current) return;
+      if (!compressing.current && !uploading.current) progress = 0;
+
       let p = Number((progress * 100).toFixed(0));
-      if (p >= 100 && compressing.current) p = 100;
+      if (p > 100 && compressing.current) {
+        // compressing.current = false;
+        p = 100;
+      }
+
       if (String(p).length > 2) Number(String(p).substring(0, 2));
-      compressing.current = true;
+
       dispatch({
         type: "progress",
         payload: {
@@ -159,13 +167,23 @@ export default function VideoUploader(props: Props) {
         },
       });
     };
-    props.ffmpeg?.on("progress", callback);
-    uploadVideo();
+
+    if (props.ffmpeg?.loaded && props.video?.name) {
+      props.ffmpeg.on("progress", callback);
+      uploadVideo();
+    }
+
+    const _file = selectedFile.current;
     return () => {
       props.ffmpeg.off("progress", callback);
+      if (_file?.name != props.video.name) {
+        compressing.current = false;
+        uploading.current = false;
+      }
     };
     // call once no matter what
-  }, [props.ffmpeg, uploadVideo]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [props.video]);
 
   const selectFile = () => {
     const input = document.createElement("input");
@@ -176,14 +194,29 @@ export default function VideoUploader(props: Props) {
       const file = input.files?.[0];
       input.remove();
       if (file) {
-        props.setVideo(file);
+        dispatch({
+          type: "progress",
+          payload: {
+            progress: {
+              show: false,
+              title: "",
+              percentage: 0,
+              message: <small>Processing...</small>,
+            },
+          },
+        });
         selectedFile.current = file;
-        await compressVideo(file as any);
+        compressing.current = false;
+        uploading.current = false;
+
+        try {
+          cancelUpload();
+        } catch (error) {}
+        props.setVideo(file);
+        await uploadVideo(file);
       }
     };
-    dispatch({
-      type: "reset",
-    });
+
     input.click();
   };
 

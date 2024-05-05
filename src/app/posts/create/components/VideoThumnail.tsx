@@ -1,14 +1,15 @@
 "use client";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { FFmpeg } from "@ffmpeg/ffmpeg";
-import { fetchFile, toBlobURL } from "@ffmpeg/util";
+import { fetchFile } from "@ffmpeg/util";
 import Image from "next/image";
-import { Loader2, RefreshCw, Trash2, Upload } from "lucide-react";
+import { Loader2, Trash2, Upload } from "lucide-react";
 
 type Props = {
   video?: File;
-  // ffmpeg: FFmpeg;
+  ffmpeg: FFmpeg;
   setReady: (value: boolean) => void;
+  thumbnail: Blob | undefined;
   setThumbnail: (file: Blob) => void;
 };
 
@@ -20,11 +21,8 @@ type Thumbnail = {
   dummy?: boolean;
 };
 
-type CacheType = Map<"data", Thumbnail[]>;
-
 export default function VideoThumbnail(props: Props) {
   const processing = useRef(false);
-  const ffmpeg = useRef<FFmpeg>();
   const [thumbnails, setThumbnails] = useState<Thumbnail[]>([]);
 
   const switchActiveFile = useCallback(
@@ -38,7 +36,6 @@ export default function VideoThumbnail(props: Props) {
           };
 
           if (data.active) {
-            console.log(thumbnail);
             props.setReady(true);
           }
           return data;
@@ -54,25 +51,15 @@ export default function VideoThumbnail(props: Props) {
     if (processing.current) return;
     processing.current = true;
 
-    const _ffmpeg = ffmpeg.current;
+    const _ffmpeg = props.ffmpeg;
 
     if (!_ffmpeg) {
       alert("Failed to load ffmpeg!");
       return;
     }
-    await _ffmpeg.writeFile("input.webm", await fetchFile(file));
-
-    var a = await _ffmpeg.exec([
-      "-i input.webm -show_format",
-      "-f",
-      "mov",
-      "-print_format",
-      "json",
-    ]);
-    console.log(a);
 
     const isFileWritten = await _ffmpeg.writeFile(
-      "input.mp4",
+      "input.webm",
       await fetchFile(file)
     );
     if (!isFileWritten) {
@@ -206,32 +193,19 @@ export default function VideoThumbnail(props: Props) {
   };
 
   useEffect(() => {
-    console.log("Rendered Thumbnail Generator");
-
-    // On ffmpeg compression progress
+    //
     const progress = ({ progress }: any) => {
       if (progress > 99 && processing.current) processing.current = false;
       else processing.current = true;
     };
 
-    // Load ffmpeg
-    const load = async () => {
-      const loaded = await ffmpeg.current?.load();
-      // Make sure ffmpeg is loaded
-      if (!loaded) return alert("Failed to load ffmpeg!");
-
-      ffmpeg.current?.on("progress", progress);
-      // Generate thumbnails
-      await generateThumbnails();
-    };
-
-    const _ffmpeg = new FFmpeg();
-
-    ffmpeg.current = _ffmpeg;
-    load();
+    if (props.video && props.ffmpeg?.loaded && !props.thumbnail) {
+      props.ffmpeg.on("progress", progress);
+      generateThumbnails();
+    }
 
     return () => {
-      _ffmpeg?.off("progress", progress);
+      props.ffmpeg?.off("progress", progress);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.video]);

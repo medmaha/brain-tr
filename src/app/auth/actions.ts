@@ -15,6 +15,7 @@ import {
 } from "@/server/controllers/users";
 import { getViberDetails } from "@/server/controllers/viber";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 // prettier-ignore
 export async function doLogin(formData: FormData, pathname:string):Promise<ActionReturn<AuthUser>> {
@@ -51,20 +52,12 @@ export async function doLogin(formData: FormData, pathname:string):Promise<Actio
 }
 
 // prettier-ignore
-export async function doSignOut(pathname: string): Promise<ActionReturn<null>> {
+export async function doSignOut(pathname: string) {
   const signedOut = clearAuthenticatedUser();
   if (signedOut) {
     revalidatePath(pathname, "layout");
-    return {
-      success: true,
-      data: null,
-      message: "You've successfully logged out",
-    };
+    redirect("/");
   }
-  return {
-    success: false,
-    message: "Failed to log out. Please try again",
-  };
 }
 
 // prettier-ignore

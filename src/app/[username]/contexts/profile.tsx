@@ -70,7 +70,7 @@ export default function ProfileContextProvider({user, profile, children}: Profil
   }
 
   function amIFollowing(username: string) {
-    return followers?.some((follower) => follower.follower.username === username) || false
+    return followers?.some((follower) => follower.follower?.username === username) || false
   }
 
   useEffect(()=>{
@@ -78,7 +78,7 @@ export default function ProfileContextProvider({user, profile, children}: Profil
   },[fetchFollows])
 
   return (
-    <ProfileContext.Provider value={{ ready, refetch, followers, followings, updateUser, amIFollowing, updateFollowers }}>
+    <ProfileContext.Provider value={{ ready, profile, refetch, followers, followings, updateUser, amIFollowing, updateFollowers }}>
       {children}
     </ProfileContext.Provider>
   );
@@ -88,6 +88,7 @@ type ProfileContextType = {
   ready: boolean;
   followers: FollowersInterface;
   followings: FollowingsInterface;
+  profile: UserDetailsInterface;
   amIFollowing: (username: string) => boolean;
   updateUser: (user: AuthUser) => void;
   refetch: (followers: boolean) => void;

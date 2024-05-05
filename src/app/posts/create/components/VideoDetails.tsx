@@ -14,7 +14,7 @@ export function VideoDetails({ thumbnail }: any) {
             id="media_name"
             required
             placeholder="Add a title that describes your video"
-            className="input min-h-[50px] text-sm p-1.5"
+            className="input min-w-[200px] !min-h-[100px] md:min-h-[50px] text-sm p-1.5"
           ></textarea>
         </div>
         <Hashtags />
@@ -24,7 +24,7 @@ export function VideoDetails({ thumbnail }: any) {
           Thumbnail
         </label>
         {thumbnail && (
-          <div className="rounded w-[250px] md:w-max border-2 border-gray-500/20 overflow-hidden">
+          <div className="rounded w-full md:w-[250px] lg:w-max border-2 border-gray-500/20 overflow-hidden">
             <Image
               key={String(thumbnail)}
               alt="active thumbnail"

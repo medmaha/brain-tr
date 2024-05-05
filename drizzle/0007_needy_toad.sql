@@ -1,1 +1,0 @@
-ALTER TABLE "comments" ALTER COLUMN "author_id" SET DATA TYPE varchar;
