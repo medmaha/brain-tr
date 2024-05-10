@@ -19,7 +19,7 @@ export function getAuthUserCookies() {
 
 /**
  * Sets the user's session in the cookies
- * @param user - The user to authenticated
+ * @param AuthUser user - The user to authenticated
  * @returns {boolean} True if the session was set
  */
 export function setAuthUserCookies(user: AuthUser) {

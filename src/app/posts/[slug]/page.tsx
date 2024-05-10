@@ -27,9 +27,9 @@ export default async function Page(props: PageProps) {
           <h4 className="font-semibold md:text-lg">Post Details</h4>
         </div>
       </div>
-      <div className="md:grid gap-2 md:grid-cols-[1fr,auto] card rounded-lg min-h-[95svh]_ md:min-h-max_">
+      <div className="md:grid gap-2 md:grid-cols-[1fr,auto] card rounded-lg min-h-[95svh]_ overflow-hidden md:min-h-max_">
         <div className="md:max-w-[800px] flex-1 block space-y-4 pb-4 md:min-w-[400px] lg:min-w-[700px]">
-          <div className="rounded-lg_ overflow-hidden">
+          <div className="rounded-br overflow-hidden">
             {post.fileType === "image" && (
               <PostImage post={post} width={925} height={500} />
             )}

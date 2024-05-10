@@ -1,28 +1,42 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
 import AuthCard from "./AuthCard";
 import InputField from "./InputField";
 import { doLogin } from "../actions";
 import toast from "react-hot-toast";
-import { useRouter } from "next/navigation";
+import { doRedirect } from "@/lib/actions";
 
 export default function LoginForm() {
-  const router = useRouter();
   const toastId = React.useRef<string>();
 
+  // Clears the notification on page navigation
+  useEffect(() => {
+    return clearToastNotification;
+  }, []);
+
+  // Clear the previous toast notification
+  const clearToastNotification = () => {
+    toast.dismiss(toastId.current);
+  };
+
+  // Submit the login form
   async function submitForm(formData: FormData) {
-    toast.dismiss(toastId.current!);
+    clearToastNotification();
 
     const response = await doLogin(formData, location.pathname);
 
     if (response.success) {
+      // Display an error notification
       toastId.current = toast.success(response.message, {
         duration: 5000,
       });
-      router.replace("/");
+
+      // revalidate the browser cache and redirect the user
+      await doRedirect("/", "layout");
       return;
     }
 
+    // Display an error notification
     toastId.current = toast.error(response.message, {
       duration: 10000,
     });

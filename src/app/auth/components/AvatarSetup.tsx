@@ -1,11 +1,10 @@
 "use client";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import AuthCard from "./AuthCard";
 import Image from "next/image";
-import { Pen } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { uploadAvatar } from "../actions";
 import toast from "react-hot-toast";
+import { doRedirect } from "@/lib/actions";
 
 type Props = {
   user: AuthUser;
@@ -16,13 +15,22 @@ export default function AvatarSetup(props: Props) {
   const [showButton, setShowButton] = useState(false);
   const [avatar, setAvatar] = useState<File>();
   const inputRef = useRef<HTMLInputElement>(null);
-  const router = useRouter();
   const toastId = useRef<string>();
 
-  let fullName = props.user.name.split(" ");
+  // Clears the notification on page navigation
+  useEffect(() => {
+    return clearToastNotification;
+  }, []);
 
+  // Clear the previous toast notification
+  const clearToastNotification = () => {
+    toast.dismiss(toastId.current);
+  };
+
+  // Opens the file explorer to open a file
   const selectFile = () => inputRef.current?.click();
 
+  // Handles avatar change events
   const onchange = async () => {
     const file = inputRef.current?.files?.[0];
     if (!file) return;
@@ -30,18 +38,29 @@ export default function AvatarSetup(props: Props) {
     setShowButton(true);
   };
 
-  async function submit(formData: FormData) {
-    toast.dismiss(toastId.current);
+  // Submit the changed avatar image
+  async function submitAvatar(formData: FormData) {
+    if (!avatar)
+      return (toastId.current = toast.error(
+        "Avatar image is required to submit this form"
+      ));
+
+    clearToastNotification();
+
+    // upload the avatar the database
     const response = await uploadAvatar(formData, location.pathname);
 
+    // Check if the file was uploaded
     if (!response.success) {
       toastId.current = toast.error(response.message, { duration: 5_000 });
       return;
     }
 
     toastId.current = toast.success(response.message);
-    router.replace("/");
+    doRedirect("/", "layout");
   }
+
+  let fullName = props.user.name.split(" ");
 
   return (
     <div className="max-w-[500px] mx-auto">
@@ -50,8 +69,10 @@ export default function AvatarSetup(props: Props) {
         description="Please upload your avatar"
         buttonText="Upload Avatar"
         showButton={showButton}
-        formAction={submit}
-        backButton={() => router.replace("/")}
+        formAction={submitAvatar}
+        backButton={async () => {
+          await doRedirect("/", "layout");
+        }}
       >
         <div className="flex justify-center pb-6 flex-col items-center gap-6">
           <div className="group relative w-[100px] h-[100px] rounded-full border">
