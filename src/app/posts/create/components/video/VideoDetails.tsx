@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Hashtags from "./Hashtags";
+import Hashtags from "../Hashtags";
 
 export function VideoDetails({ thumbnail }: any) {
   return (

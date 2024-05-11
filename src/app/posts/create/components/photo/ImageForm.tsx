@@ -1,17 +1,17 @@
 "use client";
-import { createPost } from "./actions";
-import { useFormStatus } from "react-dom";
+import { createPost } from "../../actions";
 import { useRouter } from "next/navigation";
-import ImageFile from "./components/ImageFile";
-import Hashtags from "./components/Hashtags";
-import { Loader2 } from "lucide-react";
+import ImagePicker from "./ImagePicker";
+import Hashtags from "../Hashtags";
+import SubmitLine from "../SubmitLine";
 
 type Props = {
   file_type: FileType;
 };
 
-export default function Form({ file_type }: Props) {
+export default function ImageForm({ file_type }: Props) {
   const router = useRouter();
+
   async function handleSubmit(formData: FormData) {
     if (!validateFormData(formData)) {
       return;
@@ -31,7 +31,7 @@ export default function Form({ file_type }: Props) {
       </h2>
       <form
         action={handleSubmit}
-        className="text-sm space-y-6 md:space-y-4 group"
+        className="text-sm space-y-6 md:space-y-4 group/form"
       >
         <input hidden name="file_type" defaultValue={file_type} />
 
@@ -48,12 +48,12 @@ export default function Form({ file_type }: Props) {
             id="caption"
           ></textarea>
         </div>
-        {file_type === "image" && <ImageFile />}
+        <ImagePicker />
         <Hashtags />
         {/* {file_type === "video" && <VideoFile />} */}
 
         <div className="flex justify-center mt-4">
-          <SubmitButton />
+          <SubmitLine onSubmitText="Submitting..." submitText="Submit Post" />
         </div>
       </form>
     </div>
@@ -62,19 +62,4 @@ export default function Form({ file_type }: Props) {
 
 function validateFormData(formData: FormData) {
   return true;
-}
-
-function SubmitButton() {
-  const { pending } = useFormStatus();
-
-  return (
-    <button
-      disabled={pending}
-      className="inline-flex gap-2 items-center disabled:group-valid:animate-pulse group-valid:opacity-100 opacity-50 group-valid:pointer-events-auto pointer-events-none bg-sky-400 hover:bg-sky-500 text-black font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline"
-      type="submit"
-    >
-      {pending ? "Creating" : "Create Post"}
-      {pending && <Loader2 className="w-4 h-4 animate-spin" />}
-    </button>
-  );
 }

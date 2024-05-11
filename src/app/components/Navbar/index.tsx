@@ -1,8 +1,8 @@
 import React from "react";
-import { Camera, Music, MessageSquare, Home, LogIn } from "lucide-react";
-import Link from "next/link";
+import { Camera, Music, MessageSquare, Home } from "lucide-react";
 import NavLink from "./NavLink";
 import UserProfile from "./UserProfile";
+import NavbarContainer from "./Container";
 
 type Props = {
   appName: string;
@@ -11,7 +11,7 @@ type Props = {
 
 export default function Navbar(props: Props) {
   return (
-    <header className="shadow">
+    <NavbarContainer user={props.user} appName={props.appName}>
       <nav className="p-4 flex items-center justify-between max-w-[1000px] mx-auto">
         <a
           href="/"
@@ -60,6 +60,6 @@ export default function Navbar(props: Props) {
           </ul>
         )}
       </nav>
-    </header>
+    </NavbarContainer>
   );
 }

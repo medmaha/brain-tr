@@ -3,12 +3,14 @@ import { useMemo, useState } from "react";
 import { PostFeedsInterface } from "@/server/controllers/posts";
 
 type Props = {
+  time: string;
   caption: string;
+  postType: FileType;
   mediaName?: string | null;
 };
 
 // Post Card for individual posts
-export default function PostCaption({ caption, mediaName }: Props) {
+export default function PostCaption({ caption, ...props }: Props) {
   //
   const [full, setFull] = useState(false);
   const canToggle = useMemo(() => caption.length >= 200, [caption]);
@@ -18,20 +20,33 @@ export default function PostCaption({ caption, mediaName }: Props) {
     setFull((p) => !p);
   }
 
+  const showMediaName = props.mediaName && props.postType !== "audio";
+
   return (
-    <div className="text-sm">
-      {mediaName && (
+    <div
+      className={`text-sm ${
+        !showMediaName ? "flex" : ""
+      } items-center justify-between`}
+    >
+      {showMediaName && (
         <p className="pb-1">
-          <span className="font-semibold">{mediaName}</span>
+          <span className="font-semibold">{props.mediaName}</span>
         </p>
       )}
       <p
         className={`${full ? "" : "line-clamp-2"} ${
-          mediaName ? "text-xs" : ""
+          showMediaName ? "text-xs" : ""
         }`}
       >
         {caption}
       </p>
+      {!showMediaName && (
+        <p className="text-sm opacity-70">
+          <small>
+            <time>{props.time}</time>
+          </small>
+        </p>
+      )}
       {canToggle && (
         <button onClick={toggleCaption} className="text-sky-600">
           view {full ? "less ..." : "more?"}

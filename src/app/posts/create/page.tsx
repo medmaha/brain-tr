@@ -1,7 +1,8 @@
 import { Metadata } from "next";
 import React from "react";
-import Form from "./Form";
-import CreateVideo from "./components/CreateVideo";
+import ImageForm from "./components/photo/ImageForm";
+import CreateVideo from "./components/video/CreateVideo";
+import AudioForm from "./components/audio/AudioForm";
 
 export const metadata: Metadata = {
   title: "Post Create | MDM",
@@ -20,11 +21,21 @@ export default async function Page(props: PageProps) {
       </div>
     );
 
-  return (
-    <div className="min-h-screen pt-[100px]">
-      <Form file_type={getPostType(searchParams.type as FileType)} />
-    </div>
-  );
+  if (postType === "image")
+    return (
+      <div className="min-h-screen pt-[25px]">
+        <ImageForm file_type={getPostType(searchParams.type as FileType)} />
+      </div>
+    );
+
+  if (postType === "audio")
+    return (
+      <div className="min-h-screen pt-[25px]">
+        <AudioForm />
+      </div>
+    );
+
+  return postType;
 }
 
 function getPostType(type?: FileType) {

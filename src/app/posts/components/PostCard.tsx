@@ -8,6 +8,7 @@ import PostVideo from "./PostVideo";
 import { PostFeedsInterface } from "@/server/controllers/posts";
 import { User2 } from "lucide-react";
 import Link from "next/link";
+import PostMusic from "./posts/PostMusic";
 
 type Props = {
   user?: AuthUser;
@@ -16,28 +17,41 @@ type Props = {
 
 // Post Card for individual posts
 export default function Post({ post, user }: Props) {
+  const time = format(post.createdAt, "MMM d 'at' h:mm a");
+
   return (
-    <div className="grid lg:mb-4 grid-cols-1 shadow-md rounded-b rounded-md overflow-hidden card max-w-[500px]">
-      <div className="grid items-center gap-2 justify-center">
-        {post.fileType === "image" && <PostImage post={post} />}
-        {post.fileType === "video" && <PostVideo post={post} />}
-        {post.fileType === "other" && <p>Unknown file type!</p>}
-      </div>
+    <div className="grid lg:mb-4 grid-cols-1 shadow-md rounded-md overflow-hidden card max-w-[500px]">
+      {/* <div className="grid items-center gap-2 justify-center">
+      </div> */}
+      {post.fileType === "image" && <PostImage post={post} />}
+      {post.fileType === "video" && <PostVideo post={post} />}
+      {post.fileType === "audio" && <PostMusic post={post} />}
+      {post.fileType === "other" && <p>Unknown file type!</p>}
       <div className="space-y-4 p-2">
-        <PostCaption caption={post.caption} mediaName={post.mediaName} />
+        <PostCaption
+          time={time}
+          postType={post.fileType}
+          caption={post.caption}
+          mediaName={post.mediaName}
+        />
         <div className="flex items-center justify-between gap-3">
-          <PostAuthor post={post} />
-          <p className="text-sm opacity-70">
-            <small>
-              <time>{format(post.createdAt, "MMM d 'at' h:mm a")}</time>
-              {/* <time>
+          {post.fileType !== "audio" && (
+            <>
+              <PostAuthor post={post} />
+              <p className="text-sm opacity-70">
+                <small>
+                  <time>{time}</time>
+                  {/* <time>
                 {formatDistance(new Date(post.created_at), new Date(), {
                   addSuffix: true,
                 })}s
               </time> */}
-            </small>
-          </p>
+                </small>
+              </p>
+            </>
+          )}
         </div>
+
         <PostActions post={post} user={user} />
       </div>
     </div>

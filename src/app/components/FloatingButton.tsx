@@ -76,7 +76,10 @@ function FloatingContent({ navigate }: any) {
           <span className="font-bold">Video</span>
           <span>+</span>
         </li>
-        <li className="p-1.5 rounded flex justify-between space-x-2 hover:bg-sky-100 dark:hover:bg-stone-800 cursor-pointer">
+        <li
+          onClick={() => navigate("/posts/create?type=audio")}
+          className="p-1.5 rounded flex justify-between space-x-2 hover:bg-sky-100 dark:hover:bg-stone-800 cursor-pointer"
+        >
           <span className="font-bold">Music</span>
           <span>+</span>
         </li>

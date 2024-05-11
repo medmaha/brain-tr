@@ -1,35 +1,48 @@
 "use client";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import React from "react";
 import { useFormStatus } from "react-dom";
 
 type Props = {
-  data: Map<string, string | number>;
+  submitText?: string;
+  onSubmitText?: string;
+  cancelText?: string;
+  showCancel?: true;
+  onSubmit?: () => void;
+  onCancel?: () => void;
 };
 
-export default function SubmitLine(props: Props) {
+export default function SubmitLine({ showCancel = true, ...props }: Props) {
   const router = useRouter();
   const { pending } = useFormStatus();
 
-  const cancel = async () => {};
+  const submit = async () => {
+    props.onSubmit && props.onSubmit();
+  };
+  const cancel = async () => {
+    props.onCancel ? props.onCancel() : router.back();
+  };
 
   return (
-    <div className="flex justify-evenly flex-wrap items-center pt-4 gap-4 max-w-[610px] mx-auto">
+    <div className="flex justify-evenly flex-wrap sm:flex-nowrap items-center pt-4 gap-4 max-w-[610px] w-full max-auto">
+      {showCancel && (
+        <button
+          type="button"
+          disabled={pending}
+          onClick={cancel}
+          className="order:last w-full sm:order-first disabled:opacity-40 max-w-[250px] text-sm disabled:pointer-events-none p-2 bg-gray-500 hover:bg-gray-500/90 rounded-md"
+        >
+          {props.cancelText ?? "Cancel"}
+        </button>
+      )}
       <button
         type="submit"
+        onClick={submit}
         disabled={pending}
-        className="disabled:opacity-50 pointer-events-none group-valid:pointer-events-auto group-valid:opacity-100 opacity-50 min-w-[200px] sm:order-last text-sm disabled:pointer-events-none p-2 bg-sky-500 hover:bg-sky-500/90 rounded-md"
+        className="inline-flex justify-center gap-4 items-center w-full sm:order-first disabled:opacity-40 max-w-[250px] text-sm disabled:pointer-events-none p-2 bg-primary hover:bg-primaryHover rounded-md group-invalid/form:pointer-events-none group-invalid/form:opacity-30"
       >
-        Submit Post
-        {pending && <Loader2 className="animate-spin w-4 h-4 stroke-[3px]" />}
-      </button>
-      <button
-        type="button"
-        disabled={pending}
-        className="disabled:opacity-40 min-w-[200px] text-sm disabled:pointer-events-none p-2 bg-gray-500 hover:bg-gray-500/90 rounded-md"
-      >
-        Cancel Post
+        {pending ? props.onSubmitText ?? "Submit" : ""}
+        {!pending && (props.submitText ?? "Submit")}
         {pending && <Loader2 className="animate-spin w-4 h-4 stroke-[3px]" />}
       </button>
     </div>

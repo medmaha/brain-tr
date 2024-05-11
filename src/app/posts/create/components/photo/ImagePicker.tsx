@@ -1,19 +1,43 @@
 import Image from "next/image";
 import { useRef, useState } from "react";
+import toast from "react-hot-toast";
+import { resizeImage } from "./utils";
 
-export default function ImageFile() {
-  const [image, setImage] = useState<File>();
+export default function ImagePicker() {
+  const [file, setFile] = useState<File>();
+  const [loading, toggleLoading] = useState(false);
   const elementRef = useRef<HTMLInputElement>(null);
+  const toastId = useRef<any>();
 
   function handleInputChange(event: React.ChangeEvent<HTMLInputElement>) {
+    toast.dismiss(toastId.current);
     const file = event.target.files?.[0];
     if (file) {
-      if (isValidFile(file)) {
-        setImage(file);
+      const isValid = isValidFile(file);
+      if (isValid) {
+        const callback = (file: File | null) => {
+          if (file) {
+            toggleLoading(false);
+            return setFile(file);
+          }
+          toastId.current = toast.error(
+            "An error occurred while processing your image",
+            { duration: 5_000 }
+          );
+          toggleLoading(false);
+        };
+
+        toggleLoading(true);
+        resizeImage(file, callback);
+        return;
       }
+      toastId.current = toast.error(
+        "This file is not a valid image accepted by Viby",
+        { duration: 5_000 }
+      );
       return;
     }
-    setImage(undefined);
+    setFile(undefined);
   }
 
   function isValidFile(file: File) {
@@ -31,35 +55,41 @@ export default function ImageFile() {
           *
         </span>
       </label>
-      {image && (
+      {file && (
         <div className="block mx-auto">
           <Image
-            src={URL.createObjectURL(image)}
-            width={600}
-            height={500}
+            src={URL.createObjectURL(file)}
+            width={550}
+            height={450}
             alt="Post Image"
           />
         </div>
       )}
       <div
         className={`flex items-center gap-4 ${
-          image ? "shadow sbg-white p-2 py-3 rounded-md card" : ""
+          file ? "shadow sbg-white p-2 py-3 rounded-md card" : ""
         }}`}
       >
         <button
           type="button"
+          disabled={loading}
           onClick={() => elementRef.current?.click()}
           className={`py-1 px-2 rounded-md  ${
-            image
+            file
               ? "bg-white dark:bg-stone-900 shadow shadow-sky-500"
               : "border bg-gray-600 text-white"
           }`}
         >
-          {!image ? "Chooose Image" : "Change Image"}
+          {!file ? "Choose Image" : "Change Image"}
         </button>
-        {image && (
+        {file && (
           <p className="text-sm opacity-65">
-            {image.name || "No image selected"}
+            {file.name || "No image selected"}
+          </p>
+        )}
+        {loading && (
+          <p className="text-xs animate-pulse text-primary">
+            Processing your image...
           </p>
         )}
       </div>

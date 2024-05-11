@@ -7,9 +7,9 @@ import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { toBlobURL } from "@ffmpeg/util";
 import { deleteUploadedFile } from "@/lib/firebase/uploader";
 import { VideoDetails } from "./VideoDetails";
-import { createPost, getVideoData } from "../actions";
+import { createPost, getVideoData } from "../../actions";
 import { useRouter } from "next/navigation";
-import SubmitLine from "./SubmitLine";
+import SubmitLine from "../SubmitLine";
 
 const msg = "Are you sure you want to leave? all data will be lose.";
 
@@ -238,7 +238,7 @@ export default function CreateVideo() {
           </div>
         )}
 
-        {isReady && <SubmitLine data={data} />}
+        {isReady && <SubmitLine />}
       </form>
     </div>
   );
