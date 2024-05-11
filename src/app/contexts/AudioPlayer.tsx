@@ -5,41 +5,40 @@ import {
   FastForward,
   Pause,
   Play,
+  Repeat,
   Rewind,
+  Shuffle,
   User2,
   Volume2Icon,
 } from "lucide-react";
 import Image from "next/image";
-import React, { useContext, useEffect, useRef, useState } from "react";
-import { start } from "repl";
+import React, { useEffect, useRef, useState } from "react";
 
-type PostMusicProps = {
-  post: PostFeedsInterface;
+type AudioPlayerProps = {
+  src: string;
+  objectID: string;
+  audio?: HTMLAudioElement;
+  title: string;
+  description?: string;
+  author: {
+    avatar: string;
+    username: string;
+    name: string;
+  };
 };
 
 const button =
   "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-50";
 
-export default function PostMusic(props: PostMusicProps) {
+export default function AudioPLayerProps(props: AudioPlayerProps) {
   const [audio, setAudio] = useState<HTMLAudioElement>();
   const [playing, togglePlaying] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const context = useContext(GlobalContext);
 
   const trackerIntervalRef = useRef<any>();
 
   useEffect(() => {
-    return () => {
-      clearInterval(trackerIntervalRef.current);
-    };
-  }, []);
-
-  useEffect(() => {
-    const _audio = context.getActiveAudio(props.post.slug!);
-    if (_audio) {
-      setAudio(_audio);
-      updateTimestamps(_audio);
-    }
+    togglePlay();
     return () => {
       clearInterval(trackerIntervalRef.current);
     };
@@ -47,7 +46,7 @@ export default function PostMusic(props: PostMusicProps) {
   }, []);
 
   const setVolume = (volume: number) => {
-    if (audio) audio.volume = volume;
+    if (props.audio) props.audio.volume = volume;
   };
 
   const getVolume = () => {
@@ -85,17 +84,19 @@ export default function PostMusic(props: PostMusicProps) {
 
   function setupAudio(_audio: HTMLAudioElement, src: string) {
     clearInterval(trackerIntervalRef.current);
+    _audio.muted = true;
     _audio.onplay = () => {
       togglePlaying(true);
       trackerIntervalRef.current = setInterval(() => {
         updateTimestamps(_audio);
       }, 1000);
-      context?.setActiveAudio(_audio, props.post.slug!);
+      props.audio?.play();
     };
 
     _audio.onpause = () => {
       clearInterval(trackerIntervalRef.current);
       togglePlaying(false);
+      props.audio?.pause();
     };
 
     _audio.onended = () => {
@@ -110,29 +111,26 @@ export default function PostMusic(props: PostMusicProps) {
   }
 
   const start = () => {
-    audio?.pause();
-    audio?.remove();
-    const _audio =
-      context.getActiveAudio(props.post.slug!) ||
-      document.createElement("audio");
+    clearInterval(trackerIntervalRef.current);
+    if (!props.audio?.src) return;
 
-    setupAudio(_audio, props.post.fileUrl!);
+    const _audio = audio || new Audio();
+    _audio.currentTime = audio ? audio.currentTime : props.audio.currentTime;
+    setupAudio(_audio, props.audio.src);
     setAudio(_audio);
   };
 
   const togglePlay = () => {
-    const _audio = context?.getActiveAudio(props.post.slug!) || audio;
-    if (!_audio) return start();
+    clearInterval(trackerIntervalRef.current);
+    if (!audio) return start();
 
     if (playing) {
-      _audio?.pause();
+      audio?.pause();
       togglePlaying(false);
       return;
     }
-    _audio?.play();
+    audio?.play();
     togglePlaying(true);
-
-    context?.setActiveAudio(_audio, props.post.slug!);
   };
 
   const seekVideo = (type: 0 | 1) => {
@@ -142,24 +140,27 @@ export default function PostMusic(props: PostMusicProps) {
     const totalDuration = audio.duration;
 
     function rewind(audio: any, percentage: number) {
+      if (!audio) return;
+
       const targetTime = audio.currentTime - totalDuration * (percentage / 100);
       audio.currentTime = Math.max(0, targetTime); // Ensure current time is not negative
       updateTimestamps(audio);
     }
 
     function fastForward(audio: any, percentage: number) {
+      if (!audio) return;
       const targetTime = audio.currentTime + totalDuration * (percentage / 100);
       audio.currentTime = Math.min(totalDuration, targetTime); // Ensure current time does not exceed total duration
       updateTimestamps(audio);
     }
-    context?.setActiveAudio(audio, props.post.slug!);
-
     switch (type) {
       case 0:
         rewind(audio, percentage);
+        rewind(props.audio, percentage);
         break;
       case 1:
         fastForward(audio, percentage);
+        fastForward(props.audio, percentage);
         break;
 
       default:
@@ -173,20 +174,20 @@ export default function PostMusic(props: PostMusicProps) {
       // @ts-ignore
       style={{ "--trackerWidth": "0%" }}
     >
-      <div className="p-6 w-full flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="w-full flex items-start justify-between">
+        <div className="flex items-start gap-4 flex-1">
           <div className="w-max">
-            <div className="w-11 h-11 border border-gray-400 rounded-full overflow-hidden">
-              {props.post.author?.avatar && (
+            <div className="w-8 h-8 border border-gray-400 rounded-full overflow-hidden">
+              {props.author?.avatar && (
                 <Image
-                  width={44} // Set width and height to maintain aspect ratio
-                  height={44}
-                  src={props.post.author.avatar}
+                  width={32} // Set width and height to maintain aspect ratio
+                  height={32}
+                  src={props.author.avatar}
                   alt="avatar"
                   className="w-full h-full rounded-full post-author-img"
                 />
               )}
-              {!props.post.author?.avatar && (
+              {!props.author?.avatar && (
                 <div className="h-full w-full dark:bg-black/30 flex items-center justify-center">
                   <User2 width={28} height={28} />
                 </div>
@@ -194,10 +195,10 @@ export default function PostMusic(props: PostMusicProps) {
             </div>
           </div>
           <div className="min-w-full flex-1 block">
-            <h4 className="font-semibold">{props.post.mediaName || ""}</h4>
+            <h4 className="font-semibold text-sm">{props.title || ""}</h4>
 
-            <p className="text-gray-500 dark:text-gray-400 text-sm">
-              @{context.user?.username}
+            <p className="text-gray-500 text-xs dark:text-gray-400">
+              @{props.author?.username}
             </p>
           </div>
         </div>
@@ -205,43 +206,70 @@ export default function PostMusic(props: PostMusicProps) {
           <VolumeController callback={setVolume} defaultValue={audio?.volume} />
         </div>
       </div>
-      <div className="px-6 order-1">
+      <div className="px-2 order-1">
         <div className="flex justify-between text-gray-500 dark:text-gray-400 text-xs gap-6">
-          <span data-audio-time></span>
-          <div className="flex-1 flex items-center justify-center gap-4">
-            <button
-              onClick={() => seekVideo(0)}
-              className={button}
-              disabled={!playing}
-            >
-              <Rewind />
-            </button>
-            <button
-              onClick={togglePlay}
-              type="button"
-              className={`
+          <div className="flex-1 mt-4 flex items-center justify-between gap-4">
+            <div className="flex-1 flex items-center gap-2">
+              <button
+                onClick={() => seekVideo(0)}
+                className={button}
+                disabled={!playing}
+              >
+                <Rewind width={18} height={18} />
+              </button>
+
+              <button
+                onClick={togglePlay}
+                type="button"
+                className={`
                ${
                  playing ? "text-primary" : "text-white/80"
                } hover:text-primaryHover transition-all
               `}
-            >
-              {playing ? <Pause /> : <Play />}
-            </button>
-            <button
-              onClick={() => seekVideo(1)}
-              className={button}
-              disabled={!playing}
-            >
-              <FastForward />
-            </button>
+              >
+                {playing ? (
+                  <Pause width={18} height={18} />
+                ) : (
+                  <Play width={18} height={18} />
+                )}
+              </button>
+              <button
+                onClick={() => seekVideo(1)}
+                className={button}
+                disabled={!playing}
+              >
+                <FastForward width={18} height={18} />
+              </button>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => seekVideo(1)}
+                className={button}
+                disabled={!playing}
+              >
+                <Repeat width={18} height={18} />
+              </button>
+
+              <button
+                onClick={() => seekVideo(0)}
+                className={button}
+                disabled={!playing}
+              >
+                <Shuffle width={18} height={18} />
+              </button>
+            </div>
           </div>
-          <span data-audio-duration></span>
+        </div>
+        <div className="flex mt-4 justify-between p-1 text-xs opacity-80">
+          <span data-audio-time>-:--</span>
+          <span data-audio-duration>-:--</span>
         </div>
         <div
           dir="ltr"
           data-orientation="horizontal"
           aria-disabled="false"
-          className="relative my-4 mb-6 flex w-full bg-gray-500/50 rounded-full touch-none select-none items-center"
+          className="relative flex w-full bg-gray-500/50 rounded-full touch-none select-none items-center"
         >
           <div
             data-orientation="horizontal"
@@ -268,7 +296,7 @@ function VolumeController({ disabled, callback, defaultValue }: any) {
       title="Volume"
       disabled={disabled}
     >
-      <Volume2Icon className="text-red" />
+      <Volume2Icon width={18} height={18} className="text-red" />
       <div
         itemID="volume"
         className="hidden absolute right-0 p-0 h-max group-hover:active:block group-focus:block bg-transparent"

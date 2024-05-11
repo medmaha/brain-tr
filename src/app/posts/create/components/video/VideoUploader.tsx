@@ -39,7 +39,6 @@ export default function VideoUploader(props: Props) {
 
   const compressVideo = useCallback(
     async (_file?: File) => {
-      if (compressing.current) return;
       compressing.current = true;
       const video = _file || props.video;
       const ffmpeg = props.ffmpeg;
@@ -89,6 +88,7 @@ export default function VideoUploader(props: Props) {
     if (uploading.current || compressing.current) return;
 
     const compressedVideo = (await compressVideo(file)) as File;
+
     if (!compressedVideo) return;
 
     uploading.current = true;
